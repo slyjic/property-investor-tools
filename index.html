@@ -75,6 +75,17 @@
               Investor context: this tool models disposal and tax outcomes, not full market valuation (cap rate/comparable
               sales methods).
             </p>
+            <div class="scenario-actions" data-scenario-controls data-scenario-tool="net-proceeds" data-scenario-form="property-calculator">
+              <div class="scenario-actions-row">
+                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
+                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
+                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
+                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
+                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
+              </div>
+              <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
+              <p class="scenario-status" data-scenario-status aria-live="polite"></p>
+            </div>
           </div>
           <div class="mobile-summary-bar" aria-label="Mobile quick summary">
             <div class="mobile-summary-metric">
@@ -514,6 +525,22 @@
             <p class="tool-description tool-context">
               For valuation, combine this income view with lease quality, location demand, and comparable sales.
             </p>
+            <div
+              class="scenario-actions"
+              data-scenario-controls
+              data-scenario-tool="performance"
+              data-scenario-form="investment-income-calculator"
+            >
+              <div class="scenario-actions-row">
+                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
+                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
+                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
+                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
+                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
+              </div>
+              <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
+              <p class="scenario-status" data-scenario-status aria-live="polite"></p>
+            </div>
           </div>
           <div class="mobile-summary-bar" aria-label="Mobile quick summary">
             <div class="mobile-summary-metric">
@@ -1195,6 +1222,17 @@
             <p class="tool-description tool-context">
               Capital is fixed in this model. Returns are paid as income, not capital growth.
             </p>
+            <div class="scenario-actions" data-scenario-controls data-scenario-tool="simple-fund" data-scenario-form="simple-fund-calculator">
+              <div class="scenario-actions-row">
+                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
+                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
+                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
+                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
+                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
+              </div>
+              <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
+              <p class="scenario-status" data-scenario-status aria-live="polite"></p>
+            </div>
           </div>
           <div class="mobile-summary-bar" aria-label="Mobile quick summary">
             <div class="mobile-summary-metric">
