@@ -93,6 +93,7 @@ const formatPercent = (value) => `${Number(value).toFixed(2)}%`;
 describe("pdf report smoke", () => {
   beforeEach(() => {
     MockPdf.lastInstance = null;
+    window.localStorage.clear();
   });
 
   it("generates and saves a PDF report with expected sections", () => {
@@ -140,10 +141,27 @@ describe("pdf report smoke", () => {
   });
 
   it("builds portfolio summary payload from current DOM values", () => {
+    window.localStorage.setItem(
+      "pit:scenario:performance:fy-2025-26",
+      JSON.stringify({
+        tool: "performance",
+        datasetId: "fy-2025-26",
+        values: {
+          "id:incomePropertyValue": "2000000",
+          "id:incomeOwnershipPercent": "50",
+          "id:incomeRentGst": "100000",
+        },
+      }),
+    );
+
     document.body.innerHTML = `
       <input id="ownershipPercent" value="25" />
       <input id="taxYear" value="2026-27" />
       <input id="cgtDiscount" type="checkbox" checked />
+      <select id="incomeDatasetYear">
+        <option value="fy-2024-25" selected>FY 2024-25</option>
+        <option value="fy-2025-26">FY 2025-26</option>
+      </select>
       <div id="netProceeds">$123,456.78</div>
       <div id="saleShare">$500,000.00</div>
       <div id="totalSellingCosts">$20,000.00</div>
@@ -172,6 +190,7 @@ describe("pdf report smoke", () => {
     expect(payload.netProceeds.netSettlementCash).toBeCloseTo(123456.78, 2);
     expect(payload.performance.healthStatus).toBe("Healthy");
     expect(payload.performance.positiveMonths).toBe("12 / 12");
+    expect(payload.performanceHistoryRows.length).toBeGreaterThanOrEqual(2);
     expect(payload.fund.annualDistribution).toBeCloseTo(39250, 2);
     expect(payload.fund.annualRatePercent).toBeCloseTo(7.85, 2);
   });
@@ -204,6 +223,20 @@ describe("pdf report smoke", () => {
           positiveMonths: "12 / 12",
           retainedCash: 50000,
         },
+        performanceHistoryRows: [
+          {
+            label: "FY 2024-25",
+            netOperatingCashflowShare: 206288.78,
+            netMarginPercent: 77.17,
+            netYieldPercent: 5.66,
+          },
+          {
+            label: "FY 2025-26",
+            netOperatingCashflowShare: 182000,
+            netMarginPercent: 71.5,
+            netYieldPercent: 4.95,
+          },
+        ],
         fund: {
           annualDistribution: 39250,
           monthlyDistribution: 3270.83,
@@ -225,6 +258,7 @@ describe("pdf report smoke", () => {
         "1. Net Proceeds Snapshot",
         "2. Performance Snapshot",
         "3. Simple Fund Snapshot",
+        "4. Multi-Year Trend Snapshot",
       ]),
     );
     expect(setPdfStatus).toHaveBeenLastCalledWith("Portfolio summary PDF downloaded.", "success");
