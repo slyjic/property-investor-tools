@@ -272,21 +272,32 @@ export const renderSparkline = (
 
 export const createFrameScheduler = (callback) => {
   let isCoolingDown = false;
+  let hasPending = false;
 
   const scheduleFrame =
     typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
       ? window.requestAnimationFrame.bind(window)
       : (fn) => window.setTimeout(fn, 16);
 
+  const flush = () => {
+    if (!hasPending) {
+      isCoolingDown = false;
+      return;
+    }
+
+    hasPending = false;
+    callback();
+    scheduleFrame(flush);
+  };
+
   return () => {
     if (isCoolingDown) {
+      hasPending = true;
       return;
     }
 
     callback();
     isCoolingDown = true;
-    scheduleFrame(() => {
-      isCoolingDown = false;
-    });
+    scheduleFrame(flush);
   };
 };
