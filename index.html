@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Property Investor Tools</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="calculator-card tool-suite" aria-labelledby="site-title">
+        <header class="header-block">
+          <p class="eyebrow">AU Investment Property Toolkit</p>
+          <h1 id="site-title">Property Investor Tools</h1>
+          <p class="intro">
+            Use the menu to switch between calculators. More tools can be added here over time.
+          </p>
+        </header>
+
+        <nav class="tool-menu" aria-label="Calculator menu">
+          <button
+            class="tool-tab is-active"
+            id="tab-net-proceeds"
+            type="button"
+            data-tool-tab="tool-net-proceeds"
+            aria-controls="tool-net-proceeds"
+            aria-selected="true"
+          >
+            Net Proceeds Calculator
+          </button>
+          <button
+            class="tool-tab"
+            id="tab-investment-income"
+            type="button"
+            data-tool-tab="tool-investment-income"
+            aria-controls="tool-investment-income"
+            aria-selected="false"
+          >
+            Performance Calculator
+          </button>
+          <button
+            class="tool-tab"
+            id="tab-simple-fund"
+            type="button"
+            data-tool-tab="tool-simple-fund"
+            aria-controls="tool-simple-fund"
+            aria-selected="false"
+          >
+            Simple Investment Fund
+          </button>
+        </nav>
+
+        <section class="tool-panel is-active" id="tool-net-proceeds" data-tool-panel aria-labelledby="tab-net-proceeds">
+          <div class="tool-panel-head">
+            <h2>Net Proceeds Calculator</h2>
+            <p class="tool-description">Model settlement proceeds using disposal costs, ownership apportionment, and CGT impact.</p>
+            <p class="tool-description tool-context">
+              Investor context: this tool models disposal and tax outcomes, not full market valuation (cap rate/comparable
+              sales methods).
+            </p>
+          </div>
+          <div class="mobile-summary-bar" aria-label="Mobile quick summary">
+            <div class="mobile-summary-metric">
+              <p>Net settlement cash</p>
+              <strong id="mobileNetProceeds">$0.00</strong>
+            </div>
+            <div class="mobile-summary-actions">
+              <button class="mobile-summary-btn" type="button" data-scroll-target="property-calculator">Inputs</button>
+              <button class="mobile-summary-btn" type="button" data-scroll-target="netResultsDock">Results</button>
+            </div>
+          </div>
+          <nav class="tool-jump-nav" aria-label="Net proceeds sections">
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionAsset">Asset Inputs</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionCosts">Disposal Costs</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionTax">Tax (CGT)</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netResultsDock">Settlement Outcomes</button>
+          </nav>
+
+          <div class="layout-grid">
+            <form class="input-grid net-form" id="property-calculator" novalidate>
+              <section class="panel net-panel" id="netSectionAsset" aria-labelledby="sale-details-title">
+                <h3 id="sale-details-title">1. Asset Setup</h3>
+
+                <div class="net-field-grid net-field-grid-sale">
+                  <div class="field-item">
+                    <label for="salePrice">
+                      Sale price (whole asset)
+                      <span class="info-tip" tabindex="0" aria-label="Contracted sale value for the full asset before ownership split.">
+                        i
+                        <span class="info-tip-text">Contracted sale value for the full asset before ownership split.</span>
+                      </span>
+                    </label>
+                    <input
+                      id="salePrice"
+                      name="salePrice"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$1,200,000"
+                    />
+                  </div>
+
+                  <div class="field-item">
+                    <label for="purchasePrice">Purchase price (whole asset)</label>
+                    <input
+                      id="purchasePrice"
+                      name="purchasePrice"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$800,000"
+                    />
+                  </div>
+
+                  <div class="field-item">
+                    <label for="ownershipPercent">
+                      Ownership share (%)
+                      <span class="info-tip" tabindex="0" aria-label="Used to apportion sale proceeds, costs, and capital gain to your share.">
+                        i
+                        <span class="info-tip-text">Used to apportion sale proceeds, costs, and capital gain to your share.</span>
+                      </span>
+                    </label>
+                    <input
+                      id="ownershipPercent"
+                      name="ownershipPercent"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value="100"
+                    />
+                  </div>
+
+                  <div class="field-item">
+                    <label for="taxYear">Tax year</label>
+                    <select id="taxYear" name="taxYear">
+                      <option value="2025-26" selected>2025-26 (current)</option>
+                      <option value="2026-27">2026-27</option>
+                      <option value="2027-28">2027-28</option>
+                    </select>
+                  </div>
+
+                  <div class="field-item net-field-item-full">
+                    <label for="outstandingMortgage">
+                      Loan payout at settlement (personal)
+                      <span class="info-tip" tabindex="0" aria-label="Your personal loan balance repaid at settlement. This is not scaled by ownership share.">
+                        i
+                        <span class="info-tip-text">Your personal loan balance repaid at settlement. This is not scaled by ownership share.</span>
+                      </span>
+                    </label>
+                    <input
+                      id="outstandingMortgage"
+                      name="outstandingMortgage"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$1,000,000"
+                    />
+                  </div>
+                </div>
+
+                <p class="note net-helper-note">
+                  Sale, purchase, and selling costs are split by ownership share. Loan payout is treated as your personal
+                  liability.
+                </p>
+              </section>
+
+              <section class="panel net-panel net-panel-selling-costs" id="netSectionCosts" aria-labelledby="selling-costs-title">
+                <h3 id="selling-costs-title">2. Selling Costs</h3>
+
+                <div class="net-sell-layout">
+                  <div class="net-sell-main">
+                    <div class="net-subgroup">
+                      <h4 class="net-subgroup-title">Agent commission</h4>
+
+                      <fieldset class="agent-mode" aria-labelledby="agent-mode-title">
+                        <legend id="agent-mode-title">Enter commission as</legend>
+                        <label class="radio-option" for="agentFeeTypePercent">
+                          <input id="agentFeeTypePercent" type="radio" name="agentFeeType" value="percent" checked />
+                          Percentage
+                        </label>
+                        <label class="radio-option" for="agentFeeTypeDollar">
+                          <input id="agentFeeTypeDollar" type="radio" name="agentFeeType" value="dollar" />
+                          Dollar amount
+                        </label>
+                      </fieldset>
+
+                      <div class="agent-fields net-agent-grid" data-agent-percent>
+                        <div class="field-item">
+                          <label for="agentFeePercent">Agent fee (%)</label>
+                          <input
+                            id="agentFeePercent"
+                            name="agentFeePercent"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            value="2"
+                          />
+                        </div>
+
+                        <div class="field-item">
+                          <label for="agentFeeGstPercent">GST on agent fee (%)</label>
+                          <input
+                            id="agentFeeGstPercent"
+                            name="agentFeeGstPercent"
+                            type="number"
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            value="10"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="agent-fields net-agent-grid net-agent-grid-single" data-agent-dollar hidden>
+                        <div class="field-item">
+                          <label for="agentFeeDollar">Commission amount</label>
+                          <input
+                            id="agentFeeDollar"
+                            name="agentFeeDollar"
+                            type="text"
+                            inputmode="decimal"
+                            data-currency="true"
+                            autocomplete="off"
+                            placeholder="$25,000"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="net-subgroup">
+                      <h4 class="net-subgroup-title">Other selling costs</h4>
+                      <div class="net-field-grid net-field-grid-costs">
+                        <div class="field-item">
+                          <label for="marketingCost">Marketing</label>
+                          <input
+                            id="marketingCost"
+                            name="marketingCost"
+                            type="text"
+                            inputmode="decimal"
+                            data-currency="true"
+                            autocomplete="off"
+                            placeholder="$5,000"
+                          />
+                        </div>
+
+                        <div class="field-item">
+                          <label for="legalCost">Legal / conveyancing</label>
+                          <input
+                            id="legalCost"
+                            name="legalCost"
+                            type="text"
+                            inputmode="decimal"
+                            data-currency="true"
+                            autocomplete="off"
+                            placeholder="$3,000"
+                          />
+                        </div>
+                      </div>
+
+                      <details class="field-details">
+                        <summary>Advanced settlement costs</summary>
+                        <div class="field-details-body">
+                          <div class="net-field-grid net-field-grid-costs">
+                            <div class="field-item">
+                              <label for="mortgageReleaseCost">Mortgage discharge fees</label>
+                              <input
+                                id="mortgageReleaseCost"
+                                name="mortgageReleaseCost"
+                                type="text"
+                                inputmode="decimal"
+                                data-currency="true"
+                                autocomplete="off"
+                                placeholder="$1,200"
+                              />
+                            </div>
+
+                            <div class="field-item">
+                              <label for="titleSearchCost">Title / due-diligence search</label>
+                              <input
+                                id="titleSearchCost"
+                                name="titleSearchCost"
+                                type="text"
+                                inputmode="decimal"
+                                data-currency="true"
+                                autocomplete="off"
+                                placeholder="$500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+
+                  <aside class="net-sell-summary" aria-live="polite">
+                    <h4 class="net-subgroup-title">Disposal Cost Snapshot</h4>
+                    <dl class="net-cost-list">
+                      <div>
+                        <dt>Commission (asset level)</dt>
+                        <dd id="agentFeeComputed">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Other disposal costs (asset level)</dt>
+                        <dd id="additionalSellingCostsComputed">$0.00</dd>
+                      </div>
+                      <div class="net-cost-total">
+                        <dt>Total disposal costs (asset level)</dt>
+                        <dd id="totalSellingCostsWholeComputed">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Your share of selling costs</dt>
+                        <dd id="totalSellingCostsInline">$0.00</dd>
+                      </div>
+                    </dl>
+                  </aside>
+                </div>
+              </section>
+
+              <section class="panel net-panel" id="netSectionTax" aria-labelledby="cgt-title">
+                <h3 id="cgt-title">3. CGT Estimate</h3>
+
+                <div class="net-cgt-grid">
+                  <div class="field-item">
+                    <label for="taxableIncome">
+                      Base taxable income (before this gain)
+                      <span class="info-tip" tabindex="0" aria-label="Your expected taxable income for the selected year before adding this capital gain.">
+                        i
+                        <span class="info-tip-text">Your expected taxable income for the selected year before adding this capital gain.</span>
+                      </span>
+                    </label>
+                    <input
+                      id="taxableIncome"
+                      name="taxableIncome"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$95,000"
+                    />
+                  </div>
+
+                  <div class="field-item field-item-toggle">
+                    <label class="toggle-row net-toggle" for="cgtDiscount">
+                      <input id="cgtDiscount" name="cgtDiscount" type="checkbox" checked />
+                      Apply 50% CGT discount (if eligible)
+                    </label>
+                  </div>
+                </div>
+
+                <p class="note net-helper-note">
+                  CGT uses marginal-rate math: tax on base income vs tax on base income plus taxable gain.
+                </p>
+              </section>
+            </form>
+
+            <aside class="panel panel-results net-results-panel results-panel-standard" id="netResultsDock" aria-live="polite">
+              <h3>4. Settlement Outcomes</h3>
+
+              <section class="results-hero results-hero-net" aria-label="Primary settlement outcome">
+                <p class="results-hero-label">Net cash to you at settlement</p>
+                <p class="results-hero-value" id="netProceeds">$0.00</p>
+                <p class="results-hero-note">
+                  After your share of selling costs, estimated CGT, and personal loan payout.
+                </p>
+              </section>
+
+              <dl class="result-list result-list-key">
+                <div>
+                  <dt>Ownership applied</dt>
+                  <dd id="ownershipApplied">100.00%</dd>
+                </div>
+                <div>
+                  <dt>Sale proceeds (your share)</dt>
+                  <dd id="saleShare">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Selling costs (your share, pre-CGT)</dt>
+                  <dd id="totalSellingCosts">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Estimated CGT (your circumstances)</dt>
+                  <dd id="estimatedCgt">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Loan payout at settlement (personal)</dt>
+                  <dd id="mortgageShare">$0.00</dd>
+                </div>
+                <div>
+                  <dt>After-tax profit vs purchase share</dt>
+                  <dd id="afterTaxProfit">$0.00</dd>
+                </div>
+              </dl>
+
+              <details class="results-details results-details-net">
+                <summary>Tax and gain details</summary>
+                <dl class="result-list result-list-detailed">
+                  <div>
+                    <dt>Capital gain / loss before discount</dt>
+                    <dd id="capitalGain">$0.00</dd>
+                  </div>
+                  <div>
+                    <dt>Taxable capital gain</dt>
+                    <dd id="taxableCapitalGain">$0.00</dd>
+                  </div>
+                  <div>
+                    <dt>Income tax on base income (selected year)</dt>
+                    <dd id="taxOnIncomeOnly">$0.00</dd>
+                  </div>
+                  <div>
+                    <dt>Income tax with taxable gain included</dt>
+                    <dd id="taxOnIncomeWithGain">$0.00</dd>
+                  </div>
+                </dl>
+              </details>
+
+              <div class="calculator-actions">
+                <button class="button-primary" id="downloadPdf" type="button">Download PDF Report</button>
+                <p class="pdf-status" id="pdfStatus" aria-live="polite"></p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section
+          class="tool-panel"
+          id="tool-investment-income"
+          data-tool-panel
+          hidden
+          aria-labelledby="tab-investment-income"
+        >
+          <div class="tool-panel-head">
+            <h2>Commercial Asset Performance Calculator</h2>
+            <p class="tool-description">
+              Statement-based view of income, costs, and net cashflow with yield and margin metrics.
+            </p>
+            <p class="tool-description tool-context">
+              For valuation, combine this income view with lease quality, location demand, and comparable sales.
+            </p>
+          </div>
+          <div class="mobile-summary-bar" aria-label="Mobile quick summary">
+            <div class="mobile-summary-metric">
+              <p>Net operating (your share)</p>
+              <strong id="mobileIncomeNet">$0.00</strong>
+            </div>
+            <div class="mobile-summary-actions">
+              <button class="mobile-summary-btn" type="button" data-scroll-target="investment-income-calculator">Inputs</button>
+              <button class="mobile-summary-btn" type="button" data-scroll-target="incomeResultsDock">Results</button>
+            </div>
+          </div>
+          <nav class="tool-jump-nav" aria-label="Performance sections">
+            <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionBaseline">Asset Baseline</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionTotals">Annual Totals</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionMonthly">Monthly Performance</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="incomeResultsDock">Outcomes</button>
+          </nav>
+
+          <div class="layout-grid layout-grid-investment">
+            <form class="input-grid investment-form" id="investment-income-calculator" novalidate>
+              <section class="panel income-panel income-panel-setup" id="incomeSectionBaseline" aria-labelledby="income-setup-title">
+                <h3 id="income-setup-title">1. Asset Baseline</h3>
+
+                <div class="field-grid setup-grid">
+                  <div class="field-item">
+                    <label for="incomePropertyValue">Asset value</label>
+                    <input
+                      id="incomePropertyValue"
+                      name="incomePropertyValue"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$1,100,000"
+                    />
+                  </div>
+
+                  <div class="field-item">
+                    <label for="incomeOwnershipPercent">
+                      Ownership share (%)
+                      <span class="info-tip" tabindex="0" aria-label="Used to scale net results to your personal share of the asset.">
+                        i
+                        <span class="info-tip-text">Used to scale net results to your personal share of the asset.</span>
+                      </span>
+                    </label>
+                    <input
+                      id="incomeOwnershipPercent"
+                      name="incomeOwnershipPercent"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value="100"
+                    />
+                  </div>
+
+                  <div class="field-item">
+                    <label for="incomeStartingCash">Opening cash reserve (optional)</label>
+                    <input
+                      id="incomeStartingCash"
+                      name="incomeStartingCash"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$0"
+                    />
+                  </div>
+                </div>
+
+                <p class="note">
+                  Monthly values are prefilled from your FY 2024-2025 statement summary and can be edited.
+                </p>
+              </section>
+
+              <section class="panel income-panel income-panel-categories" id="incomeSectionTotals" aria-labelledby="income-categories-title">
+                <h3 id="income-categories-title">2. Annual Category Totals</h3>
+
+                <div class="category-layout">
+                  <div class="category-group category-group-income">
+                    <h4 class="section-subtitle">Revenue</h4>
+                    <div class="field-grid">
+                    <div class="field-item">
+                      <label for="incomeRentGst">Rent (101, taxable/GST-included)</label>
+                      <input
+                        id="incomeRentGst"
+                        name="incomeRentGst"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeRentGstFree">Rent (102, GST-free)</label>
+                      <input
+                        id="incomeRentGstFree"
+                        name="incomeRentGstFree"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeOutgoingsRecovered">Tenant outgoings recovered (109)</label>
+                      <input
+                        id="incomeOutgoingsRecovered"
+                        name="incomeOutgoingsRecovered"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+                    </div>
+                    <details class="field-details">
+                      <summary>Advanced revenue adjustments</summary>
+                      <div class="field-details-body">
+                        <div class="field-grid">
+                          <div class="field-item">
+                            <label for="incomeOtherIncome">Other income / credits</label>
+                            <input
+                              id="incomeOtherIncome"
+                              name="incomeOtherIncome"
+                              type="text"
+                              inputmode="decimal"
+                              data-currency="true"
+                              autocomplete="off"
+                              placeholder="$0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div class="category-group category-group-expense">
+                    <h4 class="section-subtitle">Expenses</h4>
+                    <div class="field-grid field-grid-expenses">
+                    <div class="field-item">
+                      <label for="incomeCouncilRates">Council rates</label>
+                      <input
+                        id="incomeCouncilRates"
+                        name="incomeCouncilRates"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$2,200"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeWaterRates">Water rates</label>
+                      <input
+                        id="incomeWaterRates"
+                        name="incomeWaterRates"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$1,000"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeInsurance">Insurance</label>
+                      <input
+                        id="incomeInsurance"
+                        name="incomeInsurance"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$1,400"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeLandTax">Land tax</label>
+                      <input
+                        id="incomeLandTax"
+                        name="incomeLandTax"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeGardening">Gardening / grounds</label>
+                      <input
+                        id="incomeGardening"
+                        name="incomeGardening"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeFireSafety">Fire safety</label>
+                      <input
+                        id="incomeFireSafety"
+                        name="incomeFireSafety"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeRepairs">Repairs and maintenance</label>
+                      <input
+                        id="incomeRepairs"
+                        name="incomeRepairs"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+
+                    <div class="field-item">
+                      <label for="incomeCapex">
+                        Owner capex (non-operating)
+                        <span class="info-tip" tabindex="0" aria-label="Capital works entered for tracking. Treated as cost in this simplified performance view.">
+                          i
+                          <span class="info-tip-text">Capital works entered for tracking. Treated as cost in this simplified performance view.</span>
+                        </span>
+                      </label>
+                      <input
+                        id="incomeCapex"
+                        name="incomeCapex"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+                    </div>
+                    <details class="field-details">
+                      <summary>Advanced expense adjustments</summary>
+                      <div class="field-details-body">
+                        <div class="field-grid">
+                          <div class="field-item">
+                            <label for="incomeOtherExpenses">Other annual expenses</label>
+                            <input
+                              id="incomeOtherExpenses"
+                              name="incomeOtherExpenses"
+                              type="text"
+                              inputmode="decimal"
+                              data-currency="true"
+                              autocomplete="off"
+                              placeholder="$0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+
+                  <div class="category-group category-group-fees">
+                    <h4 class="section-subtitle">Fees</h4>
+                    <div class="field-grid field-grid-fees">
+                    <div class="field-item">
+                      <label for="incomeManagementFees">Management fees</label>
+                      <input
+                        id="incomeManagementFees"
+                        name="incomeManagementFees"
+                        type="text"
+                        inputmode="decimal"
+                        data-currency="true"
+                        autocomplete="off"
+                        placeholder="$0"
+                      />
+                    </div>
+                    </div>
+                    <details class="field-details">
+                      <summary>Advanced fee adjustments</summary>
+                      <div class="field-details-body">
+                        <div class="field-grid field-grid-fees">
+                          <div class="field-item">
+                            <label for="incomeOtherFees">Other agency fees</label>
+                            <input
+                              id="incomeOtherFees"
+                              name="incomeOtherFees"
+                              type="text"
+                              inputmode="decimal"
+                              data-currency="true"
+                              autocomplete="off"
+                              placeholder="$0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </details>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel income-panel income-panel-monthly" id="incomeSectionMonthly" aria-labelledby="income-monthly-title">
+                <h3 id="income-monthly-title">3. Monthly Operating Performance (Jul 2024 - Jun 2025)</h3>
+                <p class="note">
+                  Enter monthly statement totals. Net cashflow and margin update live by month and full year.
+                </p>
+                <div class="statement-snapshot">
+                  <div class="statement-snapshot-item">
+                    <p>Gross income (FY)</p>
+                    <strong id="incomeMonthlyStripIncome">$0.00</strong>
+                  </div>
+                  <div class="statement-snapshot-item">
+                    <p>Net operating cashflow (FY)</p>
+                    <strong id="incomeMonthlyStripNet">$0.00</strong>
+                  </div>
+                  <div class="statement-snapshot-item">
+                    <p>Avg monthly net operating</p>
+                    <strong id="incomeMonthlyStripAvg">$0.00</strong>
+                  </div>
+                  <div class="statement-snapshot-item">
+                    <p>Positive months</p>
+                    <strong id="incomeMonthlyStripPositive">0 / 12</strong>
+                  </div>
+                </div>
+
+                <div class="statement-actions" aria-label="Monthly entry quick actions">
+                  <div class="statement-action-line">
+                    <label for="incomeApplySourceMonth">Copy one month across all months</label>
+                    <div class="statement-action-controls">
+                      <select id="incomeApplySourceMonth" name="incomeApplySourceMonth">
+                        <option value="0">Jul 2024</option>
+                        <option value="1">Aug 2024</option>
+                        <option value="2">Sep 2024</option>
+                        <option value="3">Oct 2024</option>
+                        <option value="4">Nov 2024</option>
+                        <option value="5">Dec 2024</option>
+                        <option value="6">Jan 2025</option>
+                        <option value="7">Feb 2025</option>
+                        <option value="8">Mar 2025</option>
+                        <option value="9">Apr 2025</option>
+                        <option value="10">May 2025</option>
+                        <option value="11">Jun 2025</option>
+                      </select>
+                      <button class="statement-action-btn" id="incomeApplySourceToAll" type="button">Apply to all</button>
+                    </div>
+                  </div>
+                  <button class="statement-action-btn statement-action-btn-secondary" id="incomeCopyPrevAcross" type="button">
+                    Fill forward from previous month
+                  </button>
+                </div>
+
+                <div class="statement-table-wrap">
+                  <table class="statement-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Month</th>
+                        <th scope="col">Income</th>
+                        <th scope="col">Expenses</th>
+                        <th scope="col">Mgmt Fees</th>
+                        <th scope="col">Owner Draw</th>
+                        <th scope="col">Net Cashflow</th>
+                        <th scope="col">Margin</th>
+                      </tr>
+                    </thead>
+                    <tbody id="incomeStatementRows"></tbody>
+                    <tfoot>
+                      <tr class="statement-total-row">
+                        <th scope="row">Total FY</th>
+                        <td id="incomeTableTotalIncome">$0.00</td>
+                        <td id="incomeTableTotalExpenses">$0.00</td>
+                        <td id="incomeTableTotalFees">$0.00</td>
+                        <td id="incomeTableTotalDisbursement">$0.00</td>
+                        <td id="incomeTableTotalNet">$0.00</td>
+                        <td id="incomeTableTotalMargin">0.00%</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                <div class="mobile-card-controls" aria-label="Monthly card display controls">
+                  <button class="mobile-card-toggle" id="incomeCardsExpand" type="button">Expand all months</button>
+                  <button class="mobile-card-toggle" id="incomeCardsCollapse" type="button">Collapse all months</button>
+                </div>
+                <div class="statement-cards" id="incomeStatementCards" aria-label="Monthly operating performance cards"></div>
+
+                <div class="quarter-rollups" aria-label="Quarterly rollups">
+                  <h4 class="section-subtitle">Quarter Rollups</h4>
+                  <div class="quarter-rollup-grid">
+                    <article class="quarter-rollup-card">
+                      <p>Q1 (Jul-Sep)</p>
+                      <strong id="incomeQuarter1Net">$0.00</strong>
+                      <span id="incomeQuarter1Margin">0.00%</span>
+                    </article>
+                    <article class="quarter-rollup-card">
+                      <p>Q2 (Oct-Dec)</p>
+                      <strong id="incomeQuarter2Net">$0.00</strong>
+                      <span id="incomeQuarter2Margin">0.00%</span>
+                    </article>
+                    <article class="quarter-rollup-card">
+                      <p>Q3 (Jan-Mar)</p>
+                      <strong id="incomeQuarter3Net">$0.00</strong>
+                      <span id="incomeQuarter3Margin">0.00%</span>
+                    </article>
+                    <article class="quarter-rollup-card">
+                      <p>Q4 (Apr-Jun)</p>
+                      <strong id="incomeQuarter4Net">$0.00</strong>
+                      <span id="incomeQuarter4Margin">0.00%</span>
+                    </article>
+                  </div>
+                </div>
+              </section>
+            </form>
+            <aside class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock" aria-live="polite">
+              <h3>4. Performance Outcomes</h3>
+
+              <section class="results-hero results-hero-performance" aria-label="Primary performance outcome">
+                <p class="results-hero-label">Net operating cashflow (your share)</p>
+                <p class="results-hero-value" id="incomeKpiNetShare">$0.00</p>
+                <p class="results-hero-note">
+                  Health:
+                  <span class="inline-health-status" id="incomeHealthStatus">-</span>
+                  <span class="inline-health-note" id="incomeHealthNote">Adjust inputs to see a health assessment.</span>
+                </p>
+              </section>
+              <section class="health-hero" aria-label="Investment health snapshot">
+                <p class="health-label">Health Snapshot</p>
+                <p class="health-status" id="incomeHealthStatusCard">-</p>
+                <p class="health-note" id="incomeHealthNoteCard">Adjust inputs to see a high-level health summary.</p>
+                <div class="kpi-grid">
+                  <article class="kpi-card kpi-card-primary">
+                    <p class="kpi-label">Net operating cashflow (your share)</p>
+                    <p class="kpi-value" id="incomeKpiNetShareCard">$0.00</p>
+                  </article>
+                  <article class="kpi-card">
+                    <p class="kpi-label">Net yield</p>
+                    <p class="kpi-value" id="incomeKpiNetYieldCard">0.00%</p>
+                  </article>
+                  <article class="kpi-card">
+                    <p class="kpi-label">Net margin</p>
+                    <p class="kpi-value" id="incomeKpiNetMarginCard">0.00%</p>
+                  </article>
+                  <article class="kpi-card">
+                    <p class="kpi-label">Cost ratio</p>
+                    <p class="kpi-value" id="incomeKpiCostToIncomeCard">0.00%</p>
+                  </article>
+                  <article class="kpi-card">
+                    <p class="kpi-label">Positive months</p>
+                    <p class="kpi-value" id="incomeKpiPositiveMonthsCard">0 / 12</p>
+                  </article>
+                </div>
+              </section>
+              <section class="results-trend-grid" aria-label="Monthly trend layer">
+                <article class="sparkline-card" id="incomeNetTrendCard">
+                  <div class="sparkline-head">
+                    <p class="sparkline-label">Monthly net cashflow</p>
+                    <p class="sparkline-meta">
+                      Latest:
+                      <strong id="incomeTrendNetLatest">$0.00</strong>
+                    </p>
+                  </div>
+                  <svg
+                    class="sparkline-svg"
+                    id="incomeNetSparkline"
+                    viewBox="0 0 300 88"
+                    role="img"
+                    aria-label="Monthly net operating cashflow trend"
+                  ></svg>
+                </article>
+                <article class="sparkline-card" id="incomeMarginTrendCard">
+                  <div class="sparkline-head">
+                    <p class="sparkline-label">Monthly margin</p>
+                    <p class="sparkline-meta">
+                      Latest:
+                      <strong id="incomeTrendMarginLatest">0.00%</strong>
+                    </p>
+                  </div>
+                  <svg
+                    class="sparkline-svg"
+                    id="incomeMarginSparkline"
+                    viewBox="0 0 300 88"
+                    role="img"
+                    aria-label="Monthly operating margin trend"
+                  ></svg>
+                </article>
+              </section>
+
+              <dl class="result-list result-list-key">
+                <div>
+                  <dt>
+                    Net yield
+                    <span class="info-tip" tabindex="0" aria-label="Net yield here is a simplified NOI proxy: net cashflow divided by asset value.">
+                      i
+                      <span class="info-tip-text">Net yield here is a simplified NOI proxy: net cashflow divided by asset value.</span>
+                    </span>
+                  </dt>
+                  <dd id="incomeKpiNetYield">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Net margin</dt>
+                  <dd id="incomeKpiNetMargin">0.00%</dd>
+                </div>
+                <div>
+                  <dt>
+                    Cost ratio
+                    <span class="info-tip" tabindex="0" aria-label="Expenses plus fees as a percentage of income. Lower is generally better.">
+                      i
+                      <span class="info-tip-text">Expenses plus fees as a percentage of income. Lower is generally better.</span>
+                    </span>
+                  </dt>
+                  <dd id="incomeKpiCostToIncome">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Positive months</dt>
+                  <dd id="incomeKpiPositiveMonths">0 / 12</dd>
+                </div>
+                <div>
+                  <dt>Cash retained after draws</dt>
+                  <dd id="incomeKpiRetainedCash">$0.00</dd>
+                </div>
+              </dl>
+
+              <details class="results-details">
+                <summary>Detailed metrics</summary>
+                <div class="results-detail-groups">
+                  <details class="results-subdetails" open>
+                    <summary>Profitability and yield</summary>
+                    <dl class="result-list result-list-detailed">
+                      <div>
+                        <dt>Gross income (category inputs)</dt>
+                        <dd id="incomeAnnualIncome">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Operating expenses (category inputs)</dt>
+                        <dd id="incomeAnnualExpenses">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Management fees (category inputs)</dt>
+                        <dd id="incomeAnnualFees">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Net cashflow (category inputs)</dt>
+                        <dd id="incomeAnnualNet">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Gross yield on asset value</dt>
+                        <dd id="incomeGrossYield">0.00%</dd>
+                      </div>
+                      <div>
+                        <dt>Net yield on asset value</dt>
+                        <dd id="incomeNetYield">0.00%</dd>
+                      </div>
+                    </dl>
+                  </details>
+                  <details class="results-subdetails">
+                    <summary>Cashflow and owner draws</summary>
+                    <dl class="result-list result-list-detailed">
+                      <div>
+                        <dt>12-month net cashflow (monthly inputs)</dt>
+                        <dd id="incomeMonthlyNet">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Average monthly net cashflow</dt>
+                        <dd id="incomeMonthlyAverageNet">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Total owner draws</dt>
+                        <dd id="incomeOwnerDisbursements">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Your average monthly net cashflow</dt>
+                        <dd id="incomeYourShareMonthly">$0.00</dd>
+                      </div>
+                    </dl>
+                  </details>
+                  <details class="results-subdetails">
+                    <summary>Reconciliation and variance</summary>
+                    <dl class="result-list result-list-detailed">
+                      <div>
+                        <dt>Reconciliation difference (category vs monthly)</dt>
+                        <dd id="incomeNetDifference">$0.00</dd>
+                      </div>
+                      <div>
+                        <dt>Best month (net)</dt>
+                        <dd id="incomeBestMonth">-</dd>
+                      </div>
+                      <div>
+                        <dt>Worst month (net)</dt>
+                        <dd id="incomeWorstMonth">-</dd>
+                      </div>
+                    </dl>
+                  </details>
+                </div>
+              </details>
+            </aside>
+          </div>
+        </section>
+
+        <section
+          class="tool-panel"
+          id="tool-simple-fund"
+          data-tool-panel
+          hidden
+          aria-labelledby="tab-simple-fund"
+        >
+          <div class="tool-panel-head">
+            <h2>Simple Investment Fund Calculator</h2>
+            <p class="tool-description">
+              Estimate monthly income from a capital-stable fund targeting 4.00% + the current RBA cash rate.
+            </p>
+            <p class="tool-description tool-context">
+              Capital is fixed in this model. Returns are paid as income, not capital growth.
+            </p>
+          </div>
+          <div class="mobile-summary-bar" aria-label="Mobile quick summary">
+            <div class="mobile-summary-metric">
+              <p>12-month distribution</p>
+              <strong id="mobileFundAnnual">$0.00</strong>
+            </div>
+            <div class="mobile-summary-actions">
+              <button class="mobile-summary-btn" type="button" data-scroll-target="simple-fund-calculator">Inputs</button>
+              <button class="mobile-summary-btn" type="button" data-scroll-target="fundResultsDock">Results</button>
+            </div>
+          </div>
+          <nav class="tool-jump-nav" aria-label="Fund sections">
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionInput">Investment Input</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionSchedule">12-Month Schedule</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundResultsDock">Distribution Summary</button>
+          </nav>
+
+          <div class="layout-grid layout-grid-fund">
+            <form class="input-grid fund-form" id="simple-fund-calculator" novalidate>
+              <section class="panel fund-panel" id="fundSectionInput" aria-labelledby="fund-inputs-title">
+                <h3 id="fund-inputs-title">1. Investment Input</h3>
+
+                <div class="fund-input-layout">
+                  <div class="field-item">
+                    <label for="fundInvestmentAmount">Investment amount</label>
+                    <input
+                      id="fundInvestmentAmount"
+                      name="fundInvestmentAmount"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$100,000"
+                    />
+                    <p class="note fund-input-note">Income-focused model. Capital value stays fixed unless you add or withdraw capital.</p>
+                  </div>
+
+                  <aside class="fund-assumption-card" aria-label="Fund mechanics">
+                    <h4 class="net-subgroup-title">Fund Mechanics</h4>
+                    <dl class="fund-assumption-list">
+                      <div>
+                        <dt>Base return spread</dt>
+                        <dd>4.00%</dd>
+                      </div>
+                      <div>
+                        <dt>Current RBA cash rate</dt>
+                        <dd>3.85%</dd>
+                      </div>
+                      <div class="fund-assumption-total">
+                        <dt>Target annual return</dt>
+                        <dd>7.85%</dd>
+                      </div>
+                    </dl>
+                  </aside>
+                </div>
+
+                <div class="fund-presets" role="group" aria-label="Quick investment amounts">
+                  <button class="fund-preset" type="button" data-fund-preset="50000">$50k</button>
+                  <button class="fund-preset" type="button" data-fund-preset="100000">$100k</button>
+                  <button class="fund-preset" type="button" data-fund-preset="250000">$250k</button>
+                  <button class="fund-preset" type="button" data-fund-preset="500000">$500k</button>
+                  <button class="fund-preset" type="button" data-fund-preset="750000">$750k</button>
+                  <button class="fund-preset" type="button" data-fund-preset="1000000">$1.0m</button>
+                  <button class="fund-preset" type="button" data-fund-preset="1250000">$1.25m</button>
+                  <button class="fund-preset" type="button" data-fund-preset="1500000">$1.5m</button>
+                </div>
+              </section>
+
+              <section class="panel fund-panel" id="fundSectionSchedule" aria-labelledby="fund-schedule-title">
+                <h3 id="fund-schedule-title">2. 12-Month Distribution Schedule</h3>
+                <p class="note">
+                  Projection starts from <strong id="fundStartDate">-</strong>. Monthly distributions use a constant target rate.
+                </p>
+
+                <div class="fund-snapshot">
+                  <article class="fund-snapshot-item">
+                    <p>Projected monthly distribution</p>
+                    <strong id="fundSnapshotMonthly">$0.00</strong>
+                  </article>
+                  <article class="fund-snapshot-item fund-snapshot-item-primary">
+                    <p>Total projected distribution (12 months)</p>
+                    <strong id="fundSnapshotAnnual">$0.00</strong>
+                  </article>
+                  <article class="fund-snapshot-item">
+                    <p>Capital preserved</p>
+                    <strong id="fundSnapshotCapital">$0.00</strong>
+                  </article>
+                </div>
+
+                <div class="fund-table-wrap">
+                  <table class="fund-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Month</th>
+                        <th scope="col">Distribution Date</th>
+                        <th scope="col">Monthly Distribution</th>
+                        <th scope="col">Cumulative Distribution</th>
+                        <th scope="col">Capital Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fundDistributionRows"></tbody>
+                  </table>
+                </div>
+                <div class="mobile-card-controls" aria-label="Distribution card display controls">
+                  <button class="mobile-card-toggle" id="fundCardsExpand" type="button">Expand all months</button>
+                  <button class="mobile-card-toggle" id="fundCardsCollapse" type="button">Collapse all months</button>
+                </div>
+                <div class="fund-cards" id="fundDistributionCards" aria-label="Distribution schedule cards"></div>
+              </section>
+            </form>
+
+            <aside class="panel panel-results fund-results-panel results-panel-standard" id="fundResultsDock" aria-live="polite">
+              <h3>3. Distribution Summary</h3>
+
+              <section class="results-hero results-hero-fund" aria-label="Primary fund outcome">
+                <p class="results-hero-label">Total projected distribution (12 months)</p>
+                <p class="results-hero-value" id="fundAnnualDistribution">$0.00</p>
+                <p class="results-hero-note">Income projection using the current target annual rate.</p>
+              </section>
+              <section class="results-trend-grid results-trend-grid-fund" aria-label="Distribution trend layer">
+                <article class="sparkline-card sparkline-card-fund" id="fundMonthlyTrendCard">
+                  <div class="sparkline-head">
+                    <p class="sparkline-label">Monthly distribution trend</p>
+                    <p class="sparkline-meta">
+                      Monthly:
+                      <strong id="fundTrendMonthlyLatest">$0.00</strong>
+                    </p>
+                  </div>
+                  <svg
+                    class="sparkline-svg sparkline-svg-fund"
+                    id="fundMonthlySparkline"
+                    viewBox="0 0 300 88"
+                    role="img"
+                    aria-label="Monthly distribution trend"
+                  ></svg>
+                </article>
+                <article class="sparkline-card sparkline-card-fund" id="fundCumulativeTrendCard">
+                  <div class="sparkline-head">
+                    <p class="sparkline-label">Cumulative distribution (12 months)</p>
+                    <p class="sparkline-meta">
+                      12-month total:
+                      <strong id="fundTrendCumulativeLatest">$0.00</strong>
+                    </p>
+                  </div>
+                  <svg
+                    class="sparkline-svg sparkline-svg-fund"
+                    id="fundCumulativeSparkline"
+                    viewBox="0 0 300 88"
+                    role="img"
+                    aria-label="Cumulative distribution trend"
+                  ></svg>
+                </article>
+              </section>
+
+              <dl class="result-list result-list-key">
+                <div>
+                  <dt>Monthly distribution</dt>
+                  <dd id="fundMonthlyDistribution">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Capital available (withdrawable)</dt>
+                  <dd id="fundCapitalPreserved">$0.00</dd>
+                </div>
+              </dl>
+
+              <details class="results-details fund-rate-details">
+                <summary>Rate assumptions</summary>
+                <dl class="result-list result-list-detailed">
+                  <div>
+                    <dt>RBA cash rate</dt>
+                    <dd id="fundCashRate">0.00%</dd>
+                  </div>
+                  <div>
+                    <dt>Target annual rate (4.00% + cash rate)</dt>
+                    <dd id="fundAnnualRate">0.00%</dd>
+                  </div>
+                  <div>
+                    <dt>Monthly equivalent rate</dt>
+                    <dd id="fundMonthlyRate">0.00%</dd>
+                  </div>
+                </dl>
+              </details>
+
+              <p class="note">
+                Default cash rate is 3.85% (RBA target cash rate, as at 11 Mar 2026). Source:
+                <a href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noreferrer">RBA Cash Rate</a>.
+              </p>
+            </aside>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  </body>
+</html>

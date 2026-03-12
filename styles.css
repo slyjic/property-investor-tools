@@ -1,0 +1,2290 @@
+:root {
+  --page-bg: #091216;
+  --page-bg-alt: #10222a;
+  --card-bg: rgba(7, 20, 26, 0.72);
+  --card-border: rgba(153, 199, 204, 0.24);
+  --panel-bg: rgba(10, 30, 38, 0.66);
+  --panel-border: rgba(177, 215, 219, 0.28);
+  --text-main: #f1f7f7;
+  --text-muted: rgba(241, 247, 247, 0.76);
+  --text-soft: rgba(241, 247, 247, 0.62);
+  --accent: #ffa44f;
+  --accent-strong: #ff8a21;
+  --good: #69d49f;
+  --warn: #ffb15d;
+  --bad: #ff8f8f;
+  --radius: 1rem;
+  --radius-sm: 0.7rem;
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.26);
+  --content-max-width: 1400px;
+  --tool-grid-main: minmax(0, 1.45fr);
+  --tool-grid-side: minmax(320px, 0.9fr);
+  --tool-grid-gap: 1.15rem;
+  --panel-padding: 1rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
+body {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--text-main);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 164, 79, 0.16), transparent 34%),
+    radial-gradient(circle at 84% 18%, rgba(102, 180, 191, 0.14), transparent 36%),
+    linear-gradient(140deg, var(--page-bg) 0%, var(--page-bg-alt) 100%);
+}
+
+.page-shell {
+  width: min(var(--content-max-width), 100% - 2.2rem);
+  margin-inline: auto;
+  padding: clamp(1.2rem, 2.4vw, 2rem) 0 clamp(2rem, 4vw, 3rem);
+}
+
+.calculator-card {
+  border: 1px solid var(--card-border);
+  border-radius: 1.25rem;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(8px) saturate(125%);
+  padding: clamp(1.05rem, 2.2vw, 1.8rem);
+  animation: reveal 500ms ease-out;
+}
+
+.header-block {
+  margin-bottom: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+h1,
+h2,
+h3,
+legend {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.7rem, 2.7vw, 2.4rem);
+  letter-spacing: -0.015em;
+}
+
+.intro {
+  margin: 0.55rem 0 0;
+  color: var(--text-muted);
+  max-width: 72ch;
+}
+
+.tool-menu {
+  margin: 0 0 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.tool-tab {
+  appearance: none;
+  border: 1px solid rgba(188, 218, 223, 0.34);
+  border-radius: 999px;
+  background: rgba(6, 20, 27, 0.52);
+  color: var(--text-muted);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.56rem 0.9rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.tool-tab:hover,
+.tool-tab:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.78);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.tool-tab.is-active {
+  color: #ffffff;
+  border-color: rgba(255, 164, 79, 0.92);
+  background: linear-gradient(180deg, rgba(255, 164, 79, 0.24) 0%, rgba(255, 138, 33, 0.28) 100%);
+  box-shadow: 0 7px 18px rgba(255, 138, 33, 0.22);
+}
+
+.tool-panel {
+  animation: panel-reveal 260ms ease-out;
+  min-height: clamp(640px, 72vh, 920px);
+}
+
+.tool-panel[hidden] {
+  display: none !important;
+}
+
+.tool-panel-head {
+  margin-bottom: 0.98rem;
+  max-width: 90ch;
+}
+
+.mobile-summary-bar {
+  display: none;
+}
+
+.tool-panel-head h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+}
+
+.tool-description {
+  margin: 0.34rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.86rem;
+}
+
+.tool-context {
+  margin-top: 0.24rem;
+  font-size: 0.8rem;
+  color: rgba(241, 247, 247, 0.58);
+  max-width: 82ch;
+}
+
+.tool-jump-nav {
+  margin: 0 0 0.86rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.46rem;
+}
+
+.tool-jump-btn {
+  appearance: none;
+  border: 1px solid rgba(188, 218, 223, 0.26);
+  border-radius: 999px;
+  background: rgba(5, 17, 24, 0.5);
+  color: var(--text-soft);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.36rem 0.62rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.tool-jump-btn:hover,
+.tool-jump-btn:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.78);
+  color: #fff;
+  background: rgba(255, 164, 79, 0.14);
+}
+
+.layout-grid {
+  display: grid;
+  grid-template-columns: var(--tool-grid-main) var(--tool-grid-side);
+  gap: var(--tool-grid-gap);
+  align-items: start;
+}
+
+.layout-grid > * {
+  min-width: 0;
+}
+
+.input-grid {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.panel {
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(9, 24, 31, 0.76) 0%, var(--panel-bg) 100%);
+  box-shadow: var(--shadow-sm);
+  padding: var(--panel-padding);
+}
+
+.panel h2,
+.panel h3 {
+  margin: 0 0 0.8rem;
+  font-size: 1.05rem;
+}
+
+label,
+legend {
+  display: block;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+  margin: 0.72rem 0 0.32rem;
+}
+
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  margin-left: 0.32rem;
+  border: 1px solid rgba(188, 218, 223, 0.44);
+  border-radius: 999px;
+  color: rgba(255, 164, 79, 0.96);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  vertical-align: text-top;
+}
+
+.info-tip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 164, 79, 0.22);
+}
+
+.info-tip-text {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 0.4rem);
+  transform: translateX(-50%);
+  min-width: 12rem;
+  max-width: 16rem;
+  padding: 0.46rem 0.54rem;
+  border: 1px solid rgba(188, 218, 223, 0.34);
+  border-radius: 0.58rem;
+  background: rgba(7, 20, 28, 0.96);
+  color: rgba(241, 247, 247, 0.92);
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.32;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 34;
+  transition: opacity 130ms ease;
+}
+
+.info-tip:hover .info-tip-text,
+.info-tip:focus .info-tip-text,
+.info-tip:focus-visible .info-tip-text {
+  opacity: 1;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid rgba(188, 218, 223, 0.26);
+  border-radius: var(--radius-sm);
+  background: rgba(3, 15, 20, 0.62);
+  color: var(--text-main);
+  padding: 0.66rem 0.72rem;
+  font-size: 0.94rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+input::placeholder {
+  color: rgba(230, 244, 246, 0.36);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.72);
+  box-shadow: 0 0 0 3px rgba(255, 164, 79, 0.22);
+}
+
+.agent-mode {
+  margin: 0;
+  border: 1px solid rgba(188, 218, 223, 0.24);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem;
+}
+
+.agent-mode legend {
+  margin: 0;
+}
+
+.radio-option,
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 0.48rem;
+  margin-top: 0.52rem;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.radio-option input,
+.toggle-row input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--accent-strong);
+}
+
+.note {
+  margin: 0.76rem 0 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.section-subtitle {
+  margin: 1rem 0 0.35rem;
+  font-size: 0.79rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 164, 79, 0.88);
+  font-weight: 600;
+}
+
+.field-details {
+  margin-top: 0.56rem;
+  border: 1px solid rgba(188, 218, 223, 0.2);
+  border-radius: 0.74rem;
+  background: rgba(6, 19, 27, 0.54);
+}
+
+.field-details summary {
+  cursor: pointer;
+  list-style: none;
+  margin: 0;
+  padding: 0.52rem 0.62rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: rgba(241, 247, 247, 0.9);
+}
+
+.field-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.field-details[open] summary {
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.2);
+}
+
+.field-details-body {
+  padding: 0.56rem 0.62rem 0.62rem;
+}
+
+.field-details .field-grid,
+.field-details .net-field-grid {
+  margin: 0;
+}
+
+.net-form {
+  gap: 1.05rem;
+}
+
+.net-panel {
+  padding: 1rem;
+}
+
+.net-panel h3 {
+  margin-bottom: 0.62rem;
+}
+
+#tool-net-proceeds .layout-grid,
+#tool-investment-income .layout-grid-investment,
+#tool-simple-fund .layout-grid-fund {
+  grid-template-columns: var(--tool-grid-main) var(--tool-grid-side);
+  gap: var(--tool-grid-gap);
+}
+
+.net-field-grid {
+  display: grid;
+  gap: 0.7rem 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.net-field-item-full {
+  grid-column: 1 / -1;
+}
+
+.net-helper-note {
+  margin-top: 0.68rem;
+  border: 1px solid rgba(188, 218, 223, 0.2);
+  border-radius: 0.76rem;
+  padding: 0.56rem 0.66rem;
+  background: linear-gradient(180deg, rgba(8, 23, 30, 0.64) 0%, rgba(8, 23, 30, 0.3) 100%);
+}
+
+.net-subgroup {
+  margin-top: 0.72rem;
+  border: 1px solid rgba(177, 215, 219, 0.2);
+  border-radius: 0.82rem;
+  padding: 0.72rem 0.78rem 0.8rem;
+  background: linear-gradient(180deg, rgba(7, 21, 28, 0.54) 0%, rgba(8, 25, 33, 0.32) 100%);
+}
+
+.net-subgroup:first-of-type {
+  margin-top: 0.35rem;
+}
+
+.net-panel-selling-costs .net-sell-layout {
+  display: grid;
+  gap: 0.82rem;
+  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.85fr);
+  align-items: start;
+}
+
+.net-sell-main {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.net-sell-main .net-subgroup,
+.net-sell-main .net-subgroup:first-of-type {
+  margin-top: 0;
+}
+
+.net-sell-summary {
+  border: 1px solid rgba(177, 215, 219, 0.24);
+  border-radius: 0.84rem;
+  padding: 0.72rem 0.78rem 0.8rem;
+  background: linear-gradient(180deg, rgba(8, 23, 31, 0.8) 0%, rgba(8, 23, 31, 0.44) 100%);
+  box-shadow: inset 0 1px 0 rgba(188, 218, 223, 0.09);
+}
+
+.net-sell-summary .net-subgroup-title {
+  margin-bottom: 0.58rem;
+}
+
+.net-cost-list {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.net-cost-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding-bottom: 0.44rem;
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.22);
+}
+
+.net-cost-list dt {
+  margin: 0;
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.net-cost-list dd {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.96rem;
+  font-weight: 600;
+  text-align: right;
+  line-height: 1.2;
+}
+
+.net-cost-list .net-cost-total {
+  margin-top: 0.16rem;
+  padding: 0.54rem 0.58rem 0.58rem;
+  border: 1px solid rgba(105, 212, 159, 0.58);
+  border-radius: 0.72rem;
+  background:
+    linear-gradient(180deg, rgba(105, 212, 159, 0.13) 0%, rgba(16, 54, 43, 0.34) 100%),
+    rgba(6, 26, 21, 0.66);
+  border-bottom-style: solid;
+}
+
+.net-cost-list .net-cost-total dt {
+  color: rgba(222, 247, 235, 0.92);
+}
+
+.net-cost-list .net-cost-total dd {
+  color: var(--good);
+  font-size: 1.05rem;
+}
+
+.net-cost-list div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.net-subgroup-title {
+  margin: 0 0 0.48rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 164, 79, 0.9);
+}
+
+.net-agent-grid {
+  display: grid;
+  gap: 0.66rem 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0.62rem;
+}
+
+.net-agent-grid-single {
+  grid-template-columns: 1fr;
+}
+
+.net-cgt-grid {
+  display: grid;
+  gap: 0.74rem 0.8rem;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: end;
+}
+
+.net-toggle {
+  margin-top: 0;
+  min-height: 44px;
+  border: 1px solid rgba(188, 218, 223, 0.22);
+  border-radius: 0.72rem;
+  padding: 0.56rem 0.62rem;
+  background: rgba(6, 20, 28, 0.58);
+}
+
+.fund-form {
+  gap: 1rem;
+  min-width: 0;
+}
+
+.fund-panel {
+  padding: 1rem;
+  min-width: 0;
+}
+
+.fund-input-layout {
+  display: grid;
+  gap: 0.76rem;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  align-items: start;
+}
+
+.fund-input-note {
+  margin-top: 0.52rem;
+}
+
+.fund-assumption-card {
+  border: 1px solid rgba(177, 215, 219, 0.24);
+  border-radius: 0.78rem;
+  padding: 0.62rem 0.68rem;
+  background: linear-gradient(180deg, rgba(8, 23, 31, 0.76) 0%, rgba(8, 23, 31, 0.4) 100%);
+}
+
+.fund-assumption-card .net-subgroup-title {
+  margin-bottom: 0.52rem;
+}
+
+.fund-assumption-list {
+  margin: 0;
+  display: grid;
+  gap: 0.44rem;
+}
+
+.fund-assumption-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.72rem;
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.2);
+  padding-bottom: 0.36rem;
+}
+
+.fund-assumption-list dt {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.fund-assumption-list dd {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.fund-assumption-list .fund-assumption-total {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.fund-assumption-list .fund-assumption-total dd {
+  color: var(--good);
+}
+
+.fund-presets {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.fund-preset {
+  appearance: none;
+  border: 1px solid rgba(188, 218, 223, 0.34);
+  border-radius: 999px;
+  background: rgba(6, 20, 27, 0.5);
+  color: var(--text-muted);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.38rem 0.64rem;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease, transform 120ms ease;
+}
+
+.fund-preset:hover,
+.fund-preset:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.82);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.fund-preset.is-active {
+  border-color: rgba(255, 164, 79, 0.92);
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255, 164, 79, 0.22) 0%, rgba(255, 138, 33, 0.3) 100%);
+}
+
+.fund-snapshot {
+  margin-top: 0.64rem;
+  display: grid;
+  gap: 0.52rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fund-snapshot-item {
+  border: 1px solid rgba(177, 215, 219, 0.22);
+  border-radius: 0.68rem;
+  padding: 0.48rem 0.56rem;
+  background: rgba(6, 19, 27, 0.58);
+}
+
+.fund-snapshot-item p {
+  margin: 0;
+  color: rgba(241, 247, 247, 0.72);
+  font-size: 0.72rem;
+  line-height: 1.28;
+}
+
+.fund-snapshot-item strong {
+  display: block;
+  margin-top: 0.22rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 1rem;
+}
+
+.fund-snapshot-item-primary {
+  border-color: rgba(255, 164, 79, 0.68);
+  background:
+    linear-gradient(180deg, rgba(255, 164, 79, 0.18) 0%, rgba(255, 138, 33, 0.18) 100%),
+    rgba(30, 20, 10, 0.62);
+}
+
+.fund-snapshot-item-primary strong {
+  color: #ffd4a8;
+}
+
+.fund-table-wrap {
+  margin-top: 0.74rem;
+  border: 1px solid rgba(188, 218, 223, 0.24);
+  border-radius: 0.78rem;
+  background: rgba(3, 14, 18, 0.55);
+  max-width: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.fund-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 720px;
+}
+
+.fund-table th,
+.fund-table td {
+  border-bottom: 1px solid rgba(188, 218, 223, 0.14);
+  padding: 0.42rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.fund-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(227, 244, 246, 0.76);
+  background: rgba(7, 20, 28, 0.86);
+}
+
+.fund-table td:first-child {
+  font-weight: 600;
+  color: rgba(241, 247, 247, 0.9);
+  white-space: nowrap;
+}
+
+.fund-table td:nth-child(2) {
+  white-space: nowrap;
+}
+
+.fund-table th:nth-child(n + 3),
+.fund-table td:nth-child(n + 3) {
+  text-align: right;
+}
+
+.fund-table tbody tr:nth-child(even) td {
+  background: rgba(10, 24, 33, 0.34);
+}
+
+.fund-results-panel .note {
+  margin-top: 0.86rem;
+}
+
+.fund-rate-details {
+  margin-top: 0.78rem;
+}
+
+.fund-results-panel .fund-result-primary {
+  border-color: rgba(255, 164, 79, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 164, 79, 0.2) 0%, rgba(255, 138, 33, 0.2) 100%),
+    rgba(38, 24, 10, 0.62);
+  box-shadow: 0 12px 24px rgba(255, 138, 33, 0.18);
+}
+
+.fund-results-panel .fund-result-primary dt {
+  color: rgba(255, 232, 209, 0.96);
+}
+
+.fund-results-panel .fund-result-primary dd {
+  color: #ffd4a8;
+  font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+  text-shadow: 0 0 20px rgba(255, 164, 79, 0.2);
+}
+
+.fund-results-panel .note a {
+  color: var(--warn);
+}
+
+.fund-results-panel {
+  min-width: 0;
+}
+
+.investment-form {
+  gap: 1.05rem;
+}
+
+.income-panel {
+  padding: 1rem;
+}
+
+.income-panel h3 {
+  margin-bottom: 0.6rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 0.68rem 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.setup-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field-item label {
+  margin: 0 0 0.28rem;
+  font-size: 0.8rem;
+}
+
+.field-item input {
+  margin: 0;
+}
+
+.income-panel-categories {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.category-layout {
+  display: grid;
+  gap: 0.72rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    "income income fees"
+    "expense expense expense";
+}
+
+.category-group {
+  border: 1px solid rgba(177, 215, 219, 0.2);
+  border-radius: 0.82rem;
+  padding: 0.74rem 0.78rem 0.82rem;
+  background: linear-gradient(180deg, rgba(7, 21, 28, 0.54) 0%, rgba(8, 25, 33, 0.32) 100%);
+}
+
+.category-group-income {
+  grid-area: income;
+}
+
+.category-group-expense {
+  grid-area: expense;
+}
+
+.category-group-fees {
+  grid-area: fees;
+}
+
+.category-group .section-subtitle {
+  margin: 0 0 0.52rem;
+}
+
+.field-grid-expenses {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field-grid-fees {
+  grid-template-columns: 1fr;
+}
+
+.income-panel-monthly .note {
+  margin-top: 0.35rem;
+}
+
+.statement-snapshot {
+  margin-top: 0.58rem;
+  display: grid;
+  gap: 0.52rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.statement-snapshot-item {
+  border: 1px solid rgba(177, 215, 219, 0.22);
+  border-radius: 0.68rem;
+  padding: 0.46rem 0.52rem;
+  background: rgba(6, 19, 27, 0.58);
+}
+
+.statement-snapshot-item p {
+  margin: 0;
+  color: rgba(241, 247, 247, 0.72);
+  font-size: 0.72rem;
+}
+
+.statement-snapshot-item strong {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.92rem;
+}
+
+.statement-actions {
+  margin-top: 0.62rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.statement-action-line {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.statement-action-line label {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.statement-action-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.42rem;
+}
+
+.statement-action-controls select {
+  margin: 0;
+}
+
+.statement-action-btn {
+  appearance: none;
+  border: 1px solid rgba(188, 218, 223, 0.34);
+  border-radius: 0.62rem;
+  background: rgba(6, 20, 27, 0.52);
+  color: var(--text-main);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.77rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.44rem 0.62rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.statement-action-btn:hover,
+.statement-action-btn:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.82);
+  color: #fff;
+}
+
+.statement-action-btn-secondary {
+  justify-self: start;
+}
+
+.quarter-rollups {
+  margin-top: 0.78rem;
+}
+
+.quarter-rollups .section-subtitle {
+  margin: 0 0 0.5rem;
+}
+
+.quarter-rollup-grid {
+  display: grid;
+  gap: 0.48rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quarter-rollup-card {
+  border: 1px solid rgba(177, 215, 219, 0.24);
+  border-radius: 0.72rem;
+  padding: 0.46rem 0.52rem;
+  background: rgba(6, 19, 27, 0.56);
+}
+
+.quarter-rollup-card p {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.quarter-rollup-card strong {
+  display: block;
+  margin-top: 0.16rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.96rem;
+  line-height: 1.15;
+}
+
+.quarter-rollup-card span {
+  display: block;
+  margin-top: 0.1rem;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.76rem;
+  color: rgba(241, 247, 247, 0.82);
+}
+
+.panel-results .result-list div {
+  align-items: flex-start;
+}
+
+.panel-results .result-list dt {
+  max-width: 68%;
+  line-height: 1.28;
+}
+
+.panel-results .result-list dd {
+  text-align: right;
+  line-height: 1.25;
+}
+
+.results-intro {
+  margin: 0 0 0.62rem;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.health-hero {
+  border: 1px solid rgba(188, 218, 223, 0.22);
+  border-radius: 0.86rem;
+  padding: 0.68rem 0.72rem 0.72rem;
+  background: linear-gradient(180deg, rgba(8, 24, 32, 0.78) 0%, rgba(9, 29, 38, 0.54) 100%);
+}
+
+.health-label {
+  margin: 0;
+  font-size: 0.71rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(241, 247, 247, 0.66);
+}
+
+.health-status {
+  margin: 0.28rem 0 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 1.24rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.health-status.is-strong {
+  color: var(--good);
+}
+
+.health-status.is-stable {
+  color: var(--warn);
+}
+
+.health-status.is-watch {
+  color: var(--bad);
+}
+
+.health-note {
+  margin: 0.34rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.77rem;
+  line-height: 1.34;
+}
+
+.kpi-grid {
+  margin-top: 0.68rem;
+  display: grid;
+  gap: 0.48rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.kpi-card {
+  border: 1px solid rgba(177, 215, 219, 0.24);
+  border-radius: 0.76rem;
+  padding: 0.5rem 0.58rem;
+  background: rgba(6, 20, 28, 0.6);
+}
+
+.kpi-card-primary {
+  grid-column: 1 / -1;
+  background:
+    linear-gradient(180deg, rgba(105, 212, 159, 0.16) 0%, rgba(9, 43, 33, 0.44) 100%),
+    rgba(5, 25, 19, 0.72);
+  border-color: rgba(105, 212, 159, 0.56);
+}
+
+.kpi-label {
+  margin: 0;
+  color: rgba(241, 247, 247, 0.75);
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.kpi-value {
+  margin: 0.28rem 0 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.results-trend-grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.results-trend-grid-fund {
+  grid-template-columns: 1fr;
+}
+
+.sparkline-card {
+  border: 1px solid rgba(177, 215, 219, 0.24);
+  border-radius: 0.76rem;
+  padding: 0.5rem 0.56rem;
+  background: rgba(6, 20, 28, 0.6);
+}
+
+.sparkline-card.is-positive {
+  border-color: rgba(105, 212, 159, 0.44);
+}
+
+.sparkline-card.is-negative {
+  border-color: rgba(255, 143, 143, 0.52);
+}
+
+.sparkline-card.is-neutral {
+  border-color: rgba(188, 218, 223, 0.28);
+}
+
+.sparkline-card-fund {
+  border-color: rgba(255, 164, 79, 0.4);
+  background: rgba(30, 20, 10, 0.52);
+}
+
+.sparkline-head {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.sparkline-label {
+  margin: 0;
+  font-size: 0.72rem;
+  color: rgba(241, 247, 247, 0.82);
+  line-height: 1.28;
+}
+
+.sparkline-meta {
+  margin: 0;
+  font-size: 0.69rem;
+  color: var(--text-soft);
+}
+
+.sparkline-meta strong {
+  color: var(--text-main);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.82rem;
+}
+
+.sparkline-card.is-positive .sparkline-meta strong {
+  color: var(--good);
+}
+
+.sparkline-card.is-negative .sparkline-meta strong {
+  color: var(--bad);
+}
+
+.sparkline-card-fund .sparkline-meta strong {
+  color: #ffd4a8;
+}
+
+.sparkline-svg {
+  display: block;
+  width: 100%;
+  height: 86px;
+  margin-top: 0.3rem;
+  border-radius: 0.54rem;
+  background: rgba(3, 14, 20, 0.46);
+}
+
+.results-details {
+  margin-top: 0.62rem;
+  border: 1px solid rgba(188, 218, 223, 0.2);
+  border-radius: 0.74rem;
+  background: rgba(5, 18, 25, 0.52);
+}
+
+.results-details summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.56rem 0.64rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(241, 247, 247, 0.9);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+.results-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.results-details[open] summary {
+  border-bottom: 1px solid rgba(188, 218, 223, 0.18);
+}
+
+.result-list-detailed {
+  padding: 0.52rem 0.64rem 0.62rem;
+}
+
+.results-detail-groups {
+  padding: 0.44rem 0.56rem 0.58rem;
+  display: grid;
+  gap: 0.46rem;
+}
+
+.results-subdetails {
+  border: 1px solid rgba(188, 218, 223, 0.18);
+  border-radius: 0.66rem;
+  background: rgba(8, 22, 30, 0.5);
+  overflow: hidden;
+}
+
+.results-subdetails summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.46rem 0.56rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: rgba(241, 247, 247, 0.88);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+.results-subdetails summary::-webkit-details-marker {
+  display: none;
+}
+
+.results-subdetails[open] summary {
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.22);
+}
+
+.results-subdetails .result-list-detailed {
+  padding: 0.44rem 0.56rem 0.5rem;
+}
+
+.field-details summary:focus-visible,
+.results-details summary:focus-visible,
+.results-subdetails summary:focus-visible,
+.statement-card-summary:focus-visible,
+.fund-card-summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 164, 79, 0.22);
+}
+
+.mobile-card-controls {
+  display: none;
+  margin-top: 0.62rem;
+  gap: 0.44rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-card-toggle {
+  appearance: none;
+  width: 100%;
+  border: 1px solid rgba(188, 218, 223, 0.34);
+  border-radius: 0.62rem;
+  background: rgba(6, 20, 27, 0.5);
+  color: var(--text-muted);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.4rem 0.52rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.mobile-card-toggle:hover,
+.mobile-card-toggle:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.82);
+  color: #fff;
+}
+
+.statement-cards,
+.fund-cards {
+  display: none;
+  margin-top: 0.8rem;
+  gap: 0.62rem;
+}
+
+.statement-card,
+.fund-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.statement-card-details,
+.fund-card-details {
+  border: 1px solid rgba(188, 218, 223, 0.24);
+  border-radius: 0.8rem;
+  background: linear-gradient(180deg, rgba(8, 22, 30, 0.72) 0%, rgba(8, 22, 30, 0.44) 100%);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.statement-card-summary,
+.fund-card-summary {
+  list-style: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0.54rem 1.55rem 0.54rem 0.62rem;
+}
+
+.statement-card-summary::-webkit-details-marker,
+.fund-card-summary::-webkit-details-marker {
+  display: none;
+}
+
+.statement-card-summary::after,
+.fund-card-summary::after {
+  content: "+";
+  position: absolute;
+  right: 0.6rem;
+  top: 0.5rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(188, 218, 223, 0.4);
+  display: grid;
+  place-items: center;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: rgba(241, 247, 247, 0.86);
+}
+
+.statement-card-details[open] .statement-card-summary::after,
+.fund-card-details[open] .fund-card-summary::after {
+  content: "-";
+}
+
+.statement-card-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.statement-card-summary-main {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.fund-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+
+.statement-card-summary-main h4,
+.fund-card-head h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.statement-card-summary-main p {
+  margin: 0;
+  font-size: 0.71rem;
+  color: var(--text-soft);
+  line-height: 1.2;
+}
+
+.statement-card-summary-metrics {
+  display: grid;
+  justify-items: end;
+  gap: 0.1rem;
+}
+
+.statement-card-net {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: right;
+}
+
+.statement-card-margin {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+.statement-card-body {
+  border-top: 1px dashed rgba(188, 218, 223, 0.22);
+  padding: 0.48rem 0.62rem 0.62rem;
+}
+
+.statement-card-grid {
+  margin-top: 0;
+  display: grid;
+  gap: 0.42rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.statement-card-field {
+  margin: 0;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.statement-card-field span {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.statement-card-field input {
+  margin: 0;
+  padding: 0.42rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.fund-card-summary {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.fund-card-head p {
+  margin: 0;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.fund-card-summary-amount {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.56rem;
+}
+
+.fund-card-summary-amount span {
+  font-size: 0.71rem;
+  color: var(--text-soft);
+}
+
+.fund-card-summary-amount strong {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.9rem;
+  color: #ffd4a8;
+}
+
+.fund-card-list {
+  margin: 0;
+  border-top: 1px dashed rgba(188, 218, 223, 0.2);
+  padding: 0.46rem 0.62rem 0.58rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.fund-card-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.65rem;
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.2);
+  padding-bottom: 0.36rem;
+}
+
+.fund-card-list div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.fund-card-list dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.25;
+}
+
+.fund-card-list dd {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.statement-table-wrap {
+  margin-top: 0.8rem;
+  border: 1px solid rgba(188, 218, 223, 0.24);
+  border-radius: 0.78rem;
+  background: rgba(3, 14, 18, 0.55);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.statement-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 860px;
+}
+
+.statement-table th,
+.statement-table td {
+  border-bottom: 1px solid rgba(188, 218, 223, 0.14);
+  padding: 0.34rem 0.46rem;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.statement-table th {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(227, 244, 246, 0.76);
+  background: rgba(7, 20, 28, 0.86);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.statement-table td {
+  font-size: 0.79rem;
+}
+
+.statement-table th:not(:first-child),
+.statement-table td:not(:first-child) {
+  text-align: right;
+}
+
+.statement-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.statement-table .statement-month {
+  font-weight: 600;
+  color: rgba(241, 247, 247, 0.9);
+  white-space: nowrap;
+  background: rgba(8, 21, 30, 0.55);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.statement-table td input {
+  min-width: 92px;
+  padding: 0.34rem 0.42rem;
+  font-size: 0.79rem;
+  text-align: right;
+}
+
+.statement-table .statement-net,
+.statement-table .statement-margin {
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.statement-table .statement-net.value-positive,
+.statement-table .statement-margin.value-positive {
+  color: var(--good);
+}
+
+.statement-table .statement-net.value-negative,
+.statement-table .statement-margin.value-negative {
+  color: var(--bad);
+}
+
+.statement-total-row th,
+.statement-total-row td {
+  background: rgba(8, 25, 34, 0.88);
+  border-top: 1px solid rgba(188, 218, 223, 0.32);
+  border-bottom: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.statement-total-row th {
+  color: rgba(255, 164, 79, 0.96);
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: 0;
+}
+
+.panel-results {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  display: grid;
+  gap: 0.72rem;
+}
+
+.panel-results > h3 {
+  margin: 0 0 0.06rem;
+}
+
+.results-panel-standard {
+  gap: 0.72rem;
+}
+
+#tool-investment-income .investment-form,
+#tool-investment-income .investment-form .income-panel,
+#tool-investment-income .investment-form .statement-table-wrap {
+  min-width: 0;
+}
+
+#tool-investment-income .investment-results-panel {
+  min-width: 0;
+}
+
+#tool-investment-income .statement-table-wrap {
+  max-width: 100%;
+}
+
+.results-hero {
+  border: 1px solid rgba(105, 212, 159, 0.58);
+  border-radius: 0.9rem;
+  padding: 0.78rem 0.84rem 0.82rem;
+  background:
+    linear-gradient(180deg, rgba(105, 212, 159, 0.16) 0%, rgba(16, 54, 43, 0.34) 100%),
+    rgba(6, 27, 21, 0.72);
+  box-shadow: 0 12px 26px rgba(6, 26, 20, 0.3);
+}
+
+.results-hero-label {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(219, 246, 232, 0.92);
+}
+
+.results-hero-value {
+  margin: 0.3rem 0 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--good);
+  text-shadow: 0 0 20px rgba(105, 212, 159, 0.2);
+}
+
+.results-hero-note {
+  margin: 0.34rem 0 0;
+  color: rgba(226, 247, 235, 0.84);
+  font-size: 0.74rem;
+  line-height: 1.33;
+}
+
+.results-hero-performance {
+  border-color: rgba(105, 212, 159, 0.56);
+}
+
+.inline-health-status {
+  font-weight: 700;
+  margin-right: 0.24rem;
+}
+
+.inline-health-status.is-strong {
+  color: var(--good);
+}
+
+.inline-health-status.is-stable {
+  color: var(--warn);
+}
+
+.inline-health-status.is-watch {
+  color: var(--bad);
+}
+
+.inline-health-note {
+  color: rgba(226, 247, 235, 0.78);
+}
+
+.results-hero-fund {
+  border-color: rgba(255, 164, 79, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 164, 79, 0.2) 0%, rgba(255, 138, 33, 0.2) 100%),
+    rgba(38, 24, 10, 0.62);
+  box-shadow: 0 12px 24px rgba(255, 138, 33, 0.18);
+}
+
+.results-hero-fund .results-hero-label {
+  color: rgba(255, 232, 209, 0.96);
+}
+
+.results-hero-fund .results-hero-value {
+  color: #ffd4a8;
+  text-shadow: 0 0 20px rgba(255, 164, 79, 0.2);
+}
+
+.results-hero-fund .results-hero-note {
+  color: rgba(255, 232, 209, 0.9);
+}
+
+.result-list-key {
+  gap: 0.56rem;
+}
+
+.result-list-key div {
+  padding-bottom: 0.44rem;
+}
+
+.results-details-net {
+  margin-top: 0.12rem;
+}
+
+.result-list {
+  margin: 0;
+  display: grid;
+  gap: 0.62rem;
+}
+
+.result-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  border-bottom: 1px dashed rgba(188, 218, 223, 0.22);
+  padding-bottom: 0.5rem;
+}
+
+.result-list dt {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.83rem;
+}
+
+.result-list dd {
+  margin: 0;
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 1rem;
+}
+
+.result-total dt,
+.result-total dd {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.result-list .result-total {
+  border-bottom: 0;
+  padding: 0.72rem 0.78rem 0.78rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(105, 212, 159, 0.6);
+  background:
+    linear-gradient(180deg, rgba(105, 212, 159, 0.15) 0%, rgba(20, 62, 49, 0.35) 100%),
+    rgba(7, 28, 24, 0.72);
+  box-shadow: 0 10px 24px rgba(6, 26, 20, 0.34);
+}
+
+.result-total dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(219, 246, 232, 0.92);
+}
+
+.result-total dd {
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  line-height: 1;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(105, 212, 159, 0.18);
+}
+
+.value-positive {
+  color: var(--good);
+}
+
+.value-negative {
+  color: var(--bad);
+}
+
+.calculator-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.button-primary {
+  appearance: none;
+  border: 1px solid rgba(255, 164, 79, 0.72);
+  border-radius: 0.7rem;
+  background: linear-gradient(180deg, rgba(255, 164, 79, 0.26) 0%, rgba(255, 138, 33, 0.32) 100%);
+  color: var(--text-main);
+  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.62rem 0.92rem;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.button-primary:hover,
+.button-primary:focus-visible {
+  outline: none;
+  border-color: rgba(255, 164, 79, 0.95);
+  box-shadow: 0 8px 22px rgba(255, 138, 33, 0.24);
+  transform: translateY(-1px);
+}
+
+.button-primary:active {
+  transform: translateY(0);
+}
+
+.pdf-status {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.pdf-status.is-success {
+  color: var(--good);
+}
+
+.pdf-status.is-error {
+  color: var(--bad);
+}
+
+.panel-results .calculator-actions {
+  display: grid;
+  width: 100%;
+  gap: 0.45rem;
+}
+
+.panel-results .button-primary {
+  width: 100%;
+}
+
+.panel-results .pdf-status {
+  min-height: 1.05rem;
+}
+
+[id^="netSection"],
+[id^="incomeSection"],
+[id^="fundSection"],
+.panel-results,
+form[id] {
+  scroll-margin-top: 4.6rem;
+}
+
+.calculator-footer {
+  margin-top: 1rem;
+  font-size: 0.81rem;
+  color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.calculator-footer p {
+  margin: 0.25rem 0;
+}
+
+.calculator-footer a {
+  color: var(--warn);
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 177, 93, 0.45);
+  text-underline-offset: 0.14em;
+}
+
+.calculator-footer a:hover,
+.calculator-footer a:focus-visible {
+  text-decoration-color: rgba(255, 177, 93, 0.9);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes panel-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1200px) {
+  .page-shell {
+    width: min(100% - 1.6rem, var(--content-max-width));
+  }
+
+  .layout-grid {
+    grid-template-columns: minmax(0, 1.24fr) minmax(300px, 0.9fr);
+  }
+
+  .setup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-grid-expenses {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fund-snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .quarter-rollup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 980px) {
+  .page-shell {
+    width: min(100% - 1rem, var(--content-max-width));
+    margin-inline: auto;
+  }
+
+  .category-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "income"
+      "fees"
+      "expense";
+  }
+
+  .setup-grid,
+  .field-grid,
+  .field-grid-expenses {
+    grid-template-columns: 1fr;
+  }
+
+  .net-field-grid,
+  .net-agent-grid,
+  .net-cgt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fund-input-layout,
+  .fund-snapshot {
+    grid-template-columns: 1fr;
+  }
+
+  .fund-presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fund-preset {
+    width: 100%;
+    text-align: center;
+  }
+
+  .fund-table {
+    min-width: 640px;
+  }
+
+  .net-panel-selling-costs .net-sell-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-snapshot {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statement-action-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-action-btn-secondary {
+    justify-self: stretch;
+  }
+
+  .layout-grid {
+    grid-template-columns: 1fr;
+    gap: 0.86rem;
+  }
+
+  .results-trend-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-panel {
+    min-height: 0;
+  }
+
+  .panel-results {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 760px) {
+  .info-tip-text {
+    left: auto;
+    right: 0;
+    transform: none;
+    min-width: 10rem;
+    max-width: min(15rem, calc(100vw - 1.8rem));
+  }
+
+  [id^="netSection"],
+  [id^="incomeSection"],
+  [id^="fundSection"],
+  .panel-results,
+  form[id] {
+    scroll-margin-top: 6.4rem;
+  }
+
+  .tool-jump-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    padding-bottom: 0.12rem;
+    margin-bottom: 0.72rem;
+  }
+
+  .tool-jump-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .tool-jump-btn,
+  .mobile-summary-btn,
+  .mobile-card-toggle,
+  .statement-action-btn,
+  .fund-preset,
+  .button-primary {
+    min-height: 2.35rem;
+  }
+
+  .mobile-summary-bar {
+    position: sticky;
+    top: 0.55rem;
+    z-index: 16;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 0 0 0.7rem;
+    padding: 0.46rem 0.56rem;
+    border: 1px solid rgba(177, 215, 219, 0.3);
+    border-radius: 0.76rem;
+    background:
+      linear-gradient(180deg, rgba(8, 25, 34, 0.94) 0%, rgba(8, 25, 34, 0.78) 100%),
+      rgba(6, 18, 24, 0.88);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(6px) saturate(120%);
+  }
+
+  .mobile-summary-metric p {
+    margin: 0;
+    font-size: 0.68rem;
+    color: rgba(241, 247, 247, 0.72);
+    line-height: 1.2;
+  }
+
+  .mobile-summary-metric strong {
+    display: block;
+    margin-top: 0.14rem;
+    font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    font-size: 0.98rem;
+    line-height: 1.1;
+    color: var(--good);
+  }
+
+  .mobile-summary-metric strong.value-positive {
+    color: var(--good);
+  }
+
+  .mobile-summary-metric strong.value-negative {
+    color: var(--bad);
+  }
+
+  .mobile-summary-actions {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 0.34rem;
+  }
+
+  .mobile-summary-btn {
+    appearance: none;
+    border: 1px solid rgba(188, 218, 223, 0.34);
+    border-radius: 0.56rem;
+    background: rgba(6, 20, 27, 0.58);
+    color: var(--text-main);
+    font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    font-size: 0.69rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.34rem 0.5rem;
+    cursor: pointer;
+  }
+
+  .mobile-summary-btn:focus-visible,
+  .mobile-summary-btn:hover {
+    outline: none;
+    border-color: rgba(255, 164, 79, 0.84);
+  }
+
+  #tool-investment-income .statement-table-wrap,
+  #tool-simple-fund .fund-table-wrap {
+    display: none;
+  }
+
+  .mobile-card-controls {
+    display: grid;
+  }
+
+  #tool-investment-income .statement-cards,
+  #tool-simple-fund .fund-cards {
+    display: grid;
+  }
+
+  .statement-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    width: min(100% - 1rem, var(--content-max-width));
+    padding-top: 0.8rem;
+  }
+
+  .calculator-card {
+    border-radius: 1rem;
+    padding: 0.8rem;
+  }
+
+  .panel {
+    padding: 0.8rem;
+  }
+
+  .tool-tab {
+    width: 100%;
+    border-radius: 0.8rem;
+    text-align: left;
+  }
+
+  .button-primary {
+    width: 100%;
+  }
+
+  #tool-net-proceeds .tool-panel-head {
+    margin-bottom: 0.74rem;
+  }
+
+  #tool-net-proceeds .net-panel,
+  #tool-net-proceeds .net-subgroup,
+  #tool-net-proceeds .net-sell-summary {
+    padding-inline: 0.72rem;
+  }
+
+  #tool-net-proceeds .net-sell-summary .net-subgroup-title {
+    margin-bottom: 0.48rem;
+  }
+
+  #tool-net-proceeds .net-cost-list div {
+    align-items: flex-start;
+    gap: 0.36rem;
+  }
+
+  #tool-net-proceeds .net-cost-list dt,
+  #tool-net-proceeds .net-cost-list dd {
+    max-width: 100%;
+  }
+
+  #tool-net-proceeds .net-cost-list dd {
+    text-align: left;
+  }
+
+  .panel-results .result-list div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    padding-bottom: 0.58rem;
+  }
+
+  .panel-results .result-list dt,
+  .panel-results .result-list dd {
+    max-width: 100%;
+    width: 100%;
+    text-align: left;
+    line-height: 1.3;
+  }
+
+  .results-hero {
+    padding: 0.68rem 0.72rem 0.72rem;
+  }
+
+  .results-hero-value {
+    font-size: clamp(1.45rem, 7vw, 1.92rem);
+  }
+
+  .results-hero-note {
+    font-size: 0.72rem;
+  }
+
+  .sparkline-svg {
+    height: 72px;
+  }
+
+  .results-detail-groups {
+    padding-inline: 0.48rem;
+  }
+
+  .result-list div {
+    gap: 0.75rem;
+  }
+
+  .result-list dt {
+    max-width: 60%;
+  }
+
+  .statement-table {
+    min-width: 700px;
+  }
+
+  .fund-table {
+    min-width: 520px;
+  }
+
+  .fund-table th,
+  .fund-table td {
+    padding: 0.36rem 0.38rem;
+    font-size: 0.75rem;
+  }
+
+  .fund-snapshot-item strong {
+    font-size: 0.94rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-snapshot {
+    grid-template-columns: 1fr;
+  }
+
+  .quarter-rollup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-action-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .statement-action-btn {
+    width: 100%;
+  }
+
+  .result-list-detailed {
+    padding-inline: 0.56rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
