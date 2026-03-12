@@ -49,6 +49,8 @@ npm run lint
 npm run format:check
 npm test
 npm run audit:a11y
+npm run build:bundle
+npm run verify
 ```
 
 Auto-format supported files:
@@ -62,6 +64,23 @@ Rebuild browser bundle after JS changes:
 ```bash
 npm run build:bundle
 ```
+
+Run production smoke test:
+
+```bash
+npm run smoke:live
+```
+
+## GitHub + Netlify Hardening (One-Time)
+
+1. In GitHub, enable branch protection for `main`:
+   - Require pull request before merge.
+   - Require status checks to pass.
+   - Select checks from `.github/workflows/ci.yml`:
+     - `Lint, format, test, bundle`
+     - `Accessibility and browser smoke`
+2. In Netlify, keep deploys connected to the GitHub `main` branch.
+3. Avoid manual drag-and-drop deploys for normal releases so CI remains the gatekeeper.
 
 ## Notes
 
@@ -83,15 +102,14 @@ npm run build:bundle
 ## Pre-Deploy Checklist
 
 1. Install dependencies: `npm install`.
-2. Run quality gates:
-   - `npm run lint`
-   - `npm run format:check`
-   - `npm test`
+2. Run quality gate: `npm run verify`.
+3. Run browser checks:
    - `npm run audit:a11y`
-3. Build bundle: `npm run build:bundle`.
+   - `node scripts/live-smoke.mjs http://127.0.0.1:4173` (while serving locally)
 4. Smoke test in browser:
    - Tab switching works.
    - Net Proceeds values update live and PDF export works.
    - Performance calculator monthly edits and summary KPIs update.
    - Fund calculator presets/manual input update schedule and totals.
-5. Deploy the `property-sale-calculator` folder contents to hosting.
+5. Merge to `main` and let Netlify deploy from GitHub.
+6. Post-deploy validation: `npm run smoke:live`.
