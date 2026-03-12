@@ -91,6 +91,8 @@ Status: In progress (semantic tooltip controls and scoped live regions updated o
 
 ### P2. Refactor dynamic row rendering away from large `innerHTML` blocks
 
+Status: Done on 12 Mar 2026.
+
 - Why: large template strings are hard to maintain and review safely.
 - Scope:
   - Convert statement/fund row rendering to small DOM factory helpers.
@@ -100,6 +102,8 @@ Status: In progress (semantic tooltip controls and scoped live regions updated o
   - Rendering functions are smaller and easier to test.
 
 ### P2. Add light performance guardrails for high-frequency input updates
+
+Status: In progress (frame-coalesced input throttling added in net/fund tools on 12 Mar 2026; performance tool kept immediate updates to preserve live-month editing responsiveness and test determinism).
 
 - Why: each input event triggers full recalculation and broad DOM writes.
 - Scope:
@@ -121,6 +125,8 @@ Status: In progress (semantic tooltip controls and scoped live regions updated o
   - Easier traceability from component to style section.
 
 ### P2. Add deterministic fixtures for PDF output smoke testing
+
+Status: Done on 12 Mar 2026.
 
 - Why: PDF is critical output and currently validated manually.
 - Scope:

@@ -2,6 +2,7 @@ import { FUND_BASE_SPREAD_PERCENT, FUND_RBA_CASH_RATE_PERCENT } from "../config/
 import { computeFundProjection } from "../calculations/fund.js";
 import {
   byId,
+  createFrameScheduler,
   formatCurrencyInput,
   formatPercent,
   formatCurrencyValue,
@@ -67,55 +68,112 @@ export const initSimpleFundCalculator = () => {
     element.textContent = formatPercent(value);
   };
 
-  const renderDistributionRows = (rows) => {
-    fundRowsBody.innerHTML = "";
-    if (fundCardsContainer) {
-      fundCardsContainer.innerHTML = "";
+  const clearNodeChildren = (node) => {
+    if (node) {
+      node.textContent = "";
     }
+  };
+
+  const createDistributionTableRow = (row) => {
+    const rowElement = document.createElement("tr");
+
+    const monthCell = document.createElement("td");
+    monthCell.textContent = `M${row.monthIndex}`;
+    rowElement.appendChild(monthCell);
+
+    const dateCell = document.createElement("td");
+    dateCell.textContent = dateFormatter.format(row.distributionDate);
+    rowElement.appendChild(dateCell);
+
+    const monthlyCell = document.createElement("td");
+    monthlyCell.textContent = formatCurrencyValue(row.monthlyDistribution);
+    rowElement.appendChild(monthlyCell);
+
+    const cumulativeCell = document.createElement("td");
+    cumulativeCell.textContent = formatCurrencyValue(row.cumulativeDistribution);
+    rowElement.appendChild(cumulativeCell);
+
+    const capitalCell = document.createElement("td");
+    capitalCell.textContent = formatCurrencyValue(row.capitalBalance);
+    rowElement.appendChild(capitalCell);
+
+    return rowElement;
+  };
+
+  const createDistributionCard = (row, isExpanded) => {
+    const card = document.createElement("article");
+    card.className = "fund-card";
+
+    const details = document.createElement("details");
+    details.className = "fund-card-details";
+    details.open = isExpanded;
+    card.appendChild(details);
+
+    const summary = document.createElement("summary");
+    summary.className = "fund-card-summary";
+    details.appendChild(summary);
+
+    const head = document.createElement("div");
+    head.className = "fund-card-head";
+    summary.appendChild(head);
+
+    const monthLabel = document.createElement("h4");
+    monthLabel.textContent = `M${row.monthIndex}`;
+    head.appendChild(monthLabel);
+
+    const dateLabel = document.createElement("p");
+    dateLabel.textContent = dateFormatter.format(row.distributionDate);
+    head.appendChild(dateLabel);
+
+    const summaryAmount = document.createElement("div");
+    summaryAmount.className = "fund-card-summary-amount";
+    summary.appendChild(summaryAmount);
+
+    const summaryAmountLabel = document.createElement("span");
+    summaryAmountLabel.textContent = "Monthly distribution";
+    summaryAmount.appendChild(summaryAmountLabel);
+
+    const summaryAmountValue = document.createElement("strong");
+    summaryAmountValue.textContent = formatCurrencyValue(row.monthlyDistribution);
+    summaryAmount.appendChild(summaryAmountValue);
+
+    const list = document.createElement("dl");
+    list.className = "fund-card-list";
+    details.appendChild(list);
+
+    const cumulativeGroup = document.createElement("div");
+    list.appendChild(cumulativeGroup);
+    const cumulativeTerm = document.createElement("dt");
+    cumulativeTerm.textContent = "Cumulative distribution";
+    cumulativeGroup.appendChild(cumulativeTerm);
+    const cumulativeValue = document.createElement("dd");
+    cumulativeValue.textContent = formatCurrencyValue(row.cumulativeDistribution);
+    cumulativeGroup.appendChild(cumulativeValue);
+
+    const capitalGroup = document.createElement("div");
+    list.appendChild(capitalGroup);
+    const capitalTerm = document.createElement("dt");
+    capitalTerm.textContent = "Capital balance";
+    capitalGroup.appendChild(capitalTerm);
+    const capitalValue = document.createElement("dd");
+    capitalValue.textContent = formatCurrencyValue(row.capitalBalance);
+    capitalGroup.appendChild(capitalValue);
+
+    return card;
+  };
+
+  const renderDistributionRows = (rows) => {
+    clearNodeChildren(fundRowsBody);
+    clearNodeChildren(fundCardsContainer);
 
     rows.forEach((row) => {
-      const rowElement = document.createElement("tr");
-      rowElement.innerHTML = `
-        <td>M${row.monthIndex}</td>
-        <td>${dateFormatter.format(row.distributionDate)}</td>
-        <td>${formatCurrencyValue(row.monthlyDistribution)}</td>
-        <td>${formatCurrencyValue(row.cumulativeDistribution)}</td>
-        <td>${formatCurrencyValue(row.capitalBalance)}</td>
-      `;
-      fundRowsBody.appendChild(rowElement);
+      fundRowsBody.appendChild(createDistributionTableRow(row));
 
       if (!fundCardsContainer) {
         return;
       }
 
-      const card = document.createElement("article");
-      card.className = "fund-card";
-      const detailsOpenAttribute = fundCardsExpanded ? "open" : "";
-      card.innerHTML = `
-        <details class="fund-card-details" ${detailsOpenAttribute}>
-          <summary class="fund-card-summary">
-            <div class="fund-card-head">
-              <h4>M${row.monthIndex}</h4>
-              <p>${dateFormatter.format(row.distributionDate)}</p>
-            </div>
-            <div class="fund-card-summary-amount">
-              <span>Monthly distribution</span>
-              <strong>${formatCurrencyValue(row.monthlyDistribution)}</strong>
-            </div>
-          </summary>
-          <dl class="fund-card-list">
-            <div>
-              <dt>Cumulative distribution</dt>
-              <dd>${formatCurrencyValue(row.cumulativeDistribution)}</dd>
-            </div>
-            <div>
-              <dt>Capital balance</dt>
-              <dd>${formatCurrencyValue(row.capitalBalance)}</dd>
-            </div>
-          </dl>
-        </details>
-      `;
-      fundCardsContainer.appendChild(card);
+      fundCardsContainer.appendChild(createDistributionCard(row, fundCardsExpanded));
     });
   };
 
@@ -185,6 +243,8 @@ export const initSimpleFundCalculator = () => {
     renderDistributionRows(projection.rows);
   };
 
+  const scheduleFundCalculation = createFrameScheduler(calculateFundDistributions);
+
   if (fundFields.investmentAmount) {
     if (!fundFields.investmentAmount.value.trim()) {
       fundFields.investmentAmount.value = "100000";
@@ -196,7 +256,7 @@ export const initSimpleFundCalculator = () => {
 
     fundFields.investmentAmount.addEventListener("input", () => {
       sanitizeCurrencyInput(fundFields.investmentAmount);
-      calculateFundDistributions();
+      scheduleFundCalculation();
     });
 
     fundFields.investmentAmount.addEventListener("change", () => {

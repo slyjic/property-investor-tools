@@ -4,6 +4,7 @@ import { generateNetProceedsPdfReport } from "../reporting/pdf.js";
 import {
   byId,
   clampPercentInput,
+  createFrameScheduler,
   formatCurrencyInput,
   formatMoney,
   formatPercent,
@@ -179,6 +180,8 @@ export const initNetProceedsCalculator = () => {
   };
 
   const wireEvents = () => {
+    const scheduleCalculate = createFrameScheduler(calculate);
+
     agentFeeTypeInputs.forEach((radioInput) => {
       radioInput.addEventListener("change", () => {
         syncAgentFeeInputs();
@@ -196,7 +199,7 @@ export const initNetProceedsCalculator = () => {
         if (input.id === "ownershipPercent") {
           clampPercentInput(input);
         }
-        calculate();
+        scheduleCalculate();
       });
 
       input.addEventListener("change", () => {

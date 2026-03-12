@@ -215,3 +215,24 @@ export const renderSparkline = (
         stroke-linecap="round" stroke-linejoin="round"></polyline>
     `;
 };
+
+export const createFrameScheduler = (callback) => {
+  let isCoolingDown = false;
+
+  const scheduleFrame =
+    typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
+      ? window.requestAnimationFrame.bind(window)
+      : (fn) => window.setTimeout(fn, 16);
+
+  return () => {
+    if (isCoolingDown) {
+      return;
+    }
+
+    callback();
+    isCoolingDown = true;
+    scheduleFrame(() => {
+      isCoolingDown = false;
+    });
+  };
+};

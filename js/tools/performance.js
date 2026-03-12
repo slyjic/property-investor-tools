@@ -277,37 +277,169 @@ export const initPerformanceCalculator = () => {
     });
   };
 
+  const clearNodeChildren = (node) => {
+    if (node) {
+      node.textContent = "";
+    }
+  };
+
+  const createMonthInput = ({ index, field, value, mobile = false }) => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.dataset.currency = "true";
+    input.autocomplete = "off";
+    input.value = toEditableNumberString(value);
+    input.dataset.monthIndex = String(index);
+    if (mobile) {
+      input.dataset.monthFieldMobile = field;
+    } else {
+      input.dataset.monthField = field;
+    }
+    return input;
+  };
+
+  const createStatementDesktopRow = (month, index) => {
+    const row = document.createElement("tr");
+
+    const monthCell = document.createElement("td");
+    monthCell.className = "statement-month";
+    monthCell.textContent = month.label;
+    row.appendChild(monthCell);
+
+    const monthFieldConfig = [
+      { key: "income", value: month.income },
+      { key: "expenses", value: month.expenses },
+      { key: "fees", value: month.fees },
+      { key: "disbursement", value: month.disbursement },
+    ];
+
+    const inputs = {};
+    monthFieldConfig.forEach(({ key, value }) => {
+      const cell = document.createElement("td");
+      const input = createMonthInput({ index, field: key, value });
+      cell.appendChild(input);
+      row.appendChild(cell);
+      inputs[key] = input;
+    });
+
+    const netCell = document.createElement("td");
+    const outputNet = document.createElement("span");
+    outputNet.className = "statement-net";
+    outputNet.dataset.monthOutput = "net";
+    outputNet.textContent = "$0.00";
+    netCell.appendChild(outputNet);
+    row.appendChild(netCell);
+
+    const marginCell = document.createElement("td");
+    const outputMargin = document.createElement("span");
+    outputMargin.className = "statement-margin";
+    outputMargin.dataset.monthOutput = "margin";
+    outputMargin.textContent = "0.00%";
+    marginCell.appendChild(outputMargin);
+    row.appendChild(marginCell);
+
+    return {
+      row,
+      incomeInput: inputs.income,
+      expensesInput: inputs.expenses,
+      feesInput: inputs.fees,
+      disbursementInput: inputs.disbursement,
+      outputNet,
+      outputMargin,
+    };
+  };
+
+  const createStatementMobileCard = (month, index) => {
+    const card = document.createElement("article");
+    card.className = "statement-card";
+
+    const details = document.createElement("details");
+    details.className = "statement-card-details";
+    details.open = index === 0;
+    card.appendChild(details);
+
+    const summary = document.createElement("summary");
+    summary.className = "statement-card-summary";
+    details.appendChild(summary);
+
+    const summaryMain = document.createElement("div");
+    summaryMain.className = "statement-card-summary-main";
+    summary.appendChild(summaryMain);
+
+    const title = document.createElement("h4");
+    title.textContent = month.label;
+    summaryMain.appendChild(title);
+
+    const summaryHint = document.createElement("p");
+    summaryHint.textContent = "Tap to edit monthly inputs";
+    summaryMain.appendChild(summaryHint);
+
+    const summaryMetrics = document.createElement("div");
+    summaryMetrics.className = "statement-card-summary-metrics";
+    summary.appendChild(summaryMetrics);
+
+    const outputNet = document.createElement("span");
+    outputNet.className = "statement-card-net";
+    outputNet.dataset.monthOutputMobile = "net";
+    outputNet.textContent = "$0.00";
+    summaryMetrics.appendChild(outputNet);
+
+    const outputMargin = document.createElement("strong");
+    outputMargin.className = "statement-card-margin";
+    outputMargin.dataset.monthOutputMobile = "margin";
+    outputMargin.textContent = "0.00%";
+    summaryMetrics.appendChild(outputMargin);
+
+    const body = document.createElement("div");
+    body.className = "statement-card-body";
+    details.appendChild(body);
+
+    const grid = document.createElement("div");
+    grid.className = "statement-card-grid";
+    body.appendChild(grid);
+
+    const mobileFieldConfig = [
+      { key: "income", label: "Gross income", value: month.income },
+      { key: "expenses", label: "Operating expenses", value: month.expenses },
+      { key: "fees", label: "Management fees", value: month.fees },
+      { key: "disbursement", label: "Owner draw / disbursement", value: month.disbursement },
+    ];
+
+    const inputs = {};
+    mobileFieldConfig.forEach(({ key, label, value }) => {
+      const fieldLabel = document.createElement("label");
+      fieldLabel.className = "statement-card-field";
+
+      const labelText = document.createElement("span");
+      labelText.textContent = label;
+      fieldLabel.appendChild(labelText);
+
+      const input = createMonthInput({ index, field: key, value, mobile: true });
+      fieldLabel.appendChild(input);
+      grid.appendChild(fieldLabel);
+      inputs[key] = input;
+    });
+
+    return {
+      card,
+      incomeInput: inputs.income,
+      expensesInput: inputs.expenses,
+      feesInput: inputs.fees,
+      disbursementInput: inputs.disbursement,
+      outputNet,
+      outputMargin,
+    };
+  };
+
   const buildStatementRows = () => {
     monthRows = [];
-    statementRowsBody.innerHTML = "";
-    if (statementCardsContainer) {
-      statementCardsContainer.innerHTML = "";
-    }
+    clearNodeChildren(statementRowsBody);
+    clearNodeChildren(statementCardsContainer);
 
     DEFAULT_STATEMENT_MONTHS.forEach((month, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td class="statement-month">${month.label}</td>
-        <td>
-          <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-            data-month-index="${index}" data-month-field="income" value="${toEditableNumberString(month.income)}" />
-        </td>
-        <td>
-          <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-            data-month-index="${index}" data-month-field="expenses" value="${toEditableNumberString(month.expenses)}" />
-        </td>
-        <td>
-          <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-            data-month-index="${index}" data-month-field="fees" value="${toEditableNumberString(month.fees)}" />
-        </td>
-        <td>
-          <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-            data-month-index="${index}" data-month-field="disbursement" value="${toEditableNumberString(month.disbursement)}" />
-        </td>
-        <td><span class="statement-net" data-month-output="net">$0.00</span></td>
-        <td><span class="statement-margin" data-month-output="margin">0.00%</span></td>
-      `;
-      statementRowsBody.appendChild(row);
+      const desktopRow = createStatementDesktopRow(month, index);
+      statementRowsBody.appendChild(desktopRow.row);
 
       let cardIncomeInput = null;
       let cardExpensesInput = null;
@@ -317,64 +449,25 @@ export const initPerformanceCalculator = () => {
       let cardMarginOutput = null;
 
       if (statementCardsContainer) {
-        const card = document.createElement("article");
-        card.className = "statement-card";
-        card.innerHTML = `
-          <details class="statement-card-details" ${index === 0 ? "open" : ""}>
-            <summary class="statement-card-summary">
-              <div class="statement-card-summary-main">
-                <h4>${month.label}</h4>
-                <p>Tap to edit monthly inputs</p>
-              </div>
-              <div class="statement-card-summary-metrics">
-                <span class="statement-card-net" data-month-output-mobile="net">$0.00</span>
-                <strong class="statement-card-margin" data-month-output-mobile="margin">0.00%</strong>
-              </div>
-            </summary>
-            <div class="statement-card-body">
-              <div class="statement-card-grid">
-                <label class="statement-card-field">
-                  <span>Gross income</span>
-                  <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-                    data-month-index="${index}" data-month-field-mobile="income" value="${toEditableNumberString(month.income)}" />
-                </label>
-                <label class="statement-card-field">
-                  <span>Operating expenses</span>
-                  <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-                    data-month-index="${index}" data-month-field-mobile="expenses" value="${toEditableNumberString(month.expenses)}" />
-                </label>
-                <label class="statement-card-field">
-                  <span>Management fees</span>
-                  <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-                    data-month-index="${index}" data-month-field-mobile="fees" value="${toEditableNumberString(month.fees)}" />
-                </label>
-                <label class="statement-card-field">
-                  <span>Owner draw / disbursement</span>
-                  <input type="text" inputmode="decimal" data-currency="true" autocomplete="off"
-                    data-month-index="${index}" data-month-field-mobile="disbursement" value="${toEditableNumberString(month.disbursement)}" />
-                </label>
-              </div>
-            </div>
-          </details>
-        `;
-        statementCardsContainer.appendChild(card);
+        const mobileCard = createStatementMobileCard(month, index);
+        statementCardsContainer.appendChild(mobileCard.card);
 
-        cardIncomeInput = card.querySelector("input[data-month-field-mobile='income']");
-        cardExpensesInput = card.querySelector("input[data-month-field-mobile='expenses']");
-        cardFeesInput = card.querySelector("input[data-month-field-mobile='fees']");
-        cardDisbursementInput = card.querySelector("input[data-month-field-mobile='disbursement']");
-        cardNetOutput = card.querySelector("[data-month-output-mobile='net']");
-        cardMarginOutput = card.querySelector("[data-month-output-mobile='margin']");
+        cardIncomeInput = mobileCard.incomeInput;
+        cardExpensesInput = mobileCard.expensesInput;
+        cardFeesInput = mobileCard.feesInput;
+        cardDisbursementInput = mobileCard.disbursementInput;
+        cardNetOutput = mobileCard.outputNet;
+        cardMarginOutput = mobileCard.outputMargin;
       }
 
       const rowData = {
         label: month.label,
-        incomeInput: row.querySelector("input[data-month-field='income']"),
-        expensesInput: row.querySelector("input[data-month-field='expenses']"),
-        feesInput: row.querySelector("input[data-month-field='fees']"),
-        disbursementInput: row.querySelector("input[data-month-field='disbursement']"),
-        outputNet: row.querySelector("[data-month-output='net']"),
-        outputMargin: row.querySelector("[data-month-output='margin']"),
+        incomeInput: desktopRow.incomeInput,
+        expensesInput: desktopRow.expensesInput,
+        feesInput: desktopRow.feesInput,
+        disbursementInput: desktopRow.disbursementInput,
+        outputNet: desktopRow.outputNet,
+        outputMargin: desktopRow.outputMargin,
         incomeInputMobile: cardIncomeInput,
         expensesInputMobile: cardExpensesInput,
         feesInputMobile: cardFeesInput,
