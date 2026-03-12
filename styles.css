@@ -109,6 +109,13 @@ h1 {
   max-width: 72ch;
 }
 
+.portfolio-actions {
+  margin-top: 0.72rem;
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
 .tool-menu {
   margin: 0 0 1rem;
   display: flex;
