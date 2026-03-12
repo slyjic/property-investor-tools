@@ -115,6 +115,8 @@ Status: In progress (frame-coalesced input throttling added in net/fund tools on
 
 ### P2. CSS structure cleanup
 
+Status: Done on 12 Mar 2026.
+
 - Why: stylesheet is large and increasingly difficult to reason about.
 - Scope:
   - Group styles by component section with clear headers.
