@@ -8,13 +8,22 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
 
 - `index.html`: 1,273 lines
 - `styles.css`: 2,290 lines
-- `app.js`: 1,802 lines
-- Runtime checks: `node --check app.js` passes
-- Tooling/tests: no linting pipeline, no automated tests
+- `app.js`: 15 lines (entrypoint only)
+- Modularized JS:
+  - `js/shared/runtime.js`: 217 lines
+  - `js/tools/netProceeds.js`: 232 lines
+  - `js/tools/performance.js`: 673 lines
+  - `js/tools/fund.js`: 239 lines
+- Quality checks:
+  - `npm run format:check` passes
+  - `npm run lint` passes
+  - `npm test` passes (20 regression tests)
 
 ## Prioritized Tasks
 
 ### P1. Split `app.js` into focused modules
+
+Status: Done on 12 Mar 2026.
 
 - Why: one large file currently mixes calculators, DOM wiring, formatting, and PDF rendering.
 - Scope:
@@ -28,7 +37,7 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
 
 ### P1. Add formula regression tests for existing calculators
 
-Status: In progress (20 regression tests added on 12 Mar 2026).
+Status: Done on 12 Mar 2026 (20 deterministic regression tests).
 
 - Why: calculations are core business logic; currently untested.
 - Scope:
@@ -55,6 +64,8 @@ Status: Done on 12 Mar 2026.
   - No lint errors on main branch.
 
 ### P1. Move hardcoded business constants into a config layer
+
+Status: Done on 12 Mar 2026.
 
 - Why: tax brackets, RBA cash rate, and statement defaults are embedded directly in code.
 - Scope:

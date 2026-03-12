@@ -5,10 +5,10 @@ export default [
     ignores: ["node_modules/", "coverage/"],
   },
   {
-    files: ["app.js"],
+    files: ["app.js", "js/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
       },
