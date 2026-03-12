@@ -54,6 +54,35 @@ const setRadio = (id) => {
 const moneyOutput = (id) => parseMoneyText(byId(id).textContent);
 const percentOutput = (id) => parsePercentText(byId(id).textContent);
 const textOutput = (id) => String(byId(id).textContent ?? "").trim();
+const moneyInput = (id) => parseMoneyText(byId(id).value);
+
+const scenarioButton = (tool, action) => {
+  const container = document.querySelector(`[data-scenario-tool='${tool}']`);
+  if (!container) {
+    throw new Error(`Missing scenario controls for tool: ${tool}`);
+  }
+
+  const button = container.querySelector(`[data-scenario-action='${action}']`);
+  if (!button) {
+    throw new Error(`Missing scenario action "${action}" for tool: ${tool}`);
+  }
+
+  return button;
+};
+
+const scenarioImportInput = (tool) => {
+  const container = document.querySelector(`[data-scenario-tool='${tool}']`);
+  if (!container) {
+    throw new Error(`Missing scenario controls for tool: ${tool}`);
+  }
+
+  const input = container.querySelector("[data-scenario-action='import-file']");
+  if (!input) {
+    throw new Error(`Missing scenario import input for tool: ${tool}`);
+  }
+
+  return input;
+};
 
 const loadApp = async () => {
   document.open();
@@ -65,6 +94,7 @@ const loadApp = async () => {
 };
 
 beforeEach(async () => {
+  window.localStorage.clear();
   await loadApp();
 });
 
@@ -354,5 +384,70 @@ describe("simple fund calculator regression", () => {
     setInput("fundInvestmentAmount", "400000");
 
     expect(moneyOutput("fundTrendCumulativeLatest")).toBeCloseTo(moneyOutput("fundAnnualDistribution"), 2);
+  });
+});
+
+describe("scenario persistence", () => {
+  it("saves and reloads net proceeds inputs from localStorage", () => {
+    setInput("salePrice", "1234567");
+    setInput("ownershipPercent", "33");
+    setSelect("taxYear", "2027-28");
+    setCheckbox("cgtDiscount", false);
+
+    scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    const stored = window.localStorage.getItem("pit:scenario:net-proceeds");
+    expect(stored).toBeTruthy();
+
+    setInput("salePrice", "800000");
+    setInput("ownershipPercent", "100");
+    setSelect("taxYear", "2025-26");
+    setCheckbox("cgtDiscount", true);
+
+    scenarioButton("net-proceeds", "load").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(moneyInput("salePrice")).toBeCloseTo(1234567, 2);
+    expect(Number.parseFloat(byId("ownershipPercent").value)).toBeCloseTo(33, 2);
+    expect(byId("taxYear").value).toBe("2027-28");
+    expect(byId("cgtDiscount").checked).toBe(false);
+  });
+
+  it("resets fund inputs to defaults and clears saved state", () => {
+    setInput("fundInvestmentAmount", "500000");
+    scenarioButton("simple-fund", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(window.localStorage.getItem("pit:scenario:simple-fund")).toBeTruthy();
+
+    scenarioButton("simple-fund", "reset").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(window.localStorage.getItem("pit:scenario:simple-fund")).toBeNull();
+    expect(moneyInput("fundInvestmentAmount")).toBeCloseTo(100000, 2);
+    expect(moneyOutput("fundAnnualDistribution")).toBeCloseTo(7850, 2);
+  });
+
+  it("imports JSON values into performance calculator", async () => {
+    const importInput = scenarioImportInput("performance");
+    const payload = {
+      tool: "performance",
+      values: {
+        "id:incomeOwnershipPercent": "25",
+        "id:incomePropertyValue": "2000000",
+      },
+    };
+    const file = new window.File([JSON.stringify(payload)], "performance.json", {
+      type: "application/json",
+    });
+
+    Object.defineProperty(importInput, "files", {
+      value: [file],
+      configurable: true,
+    });
+    fire(importInput, "change");
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+
+    expect(Number.parseFloat(byId("incomeOwnershipPercent").value)).toBeCloseTo(25, 2);
+    expect(moneyInput("incomePropertyValue")).toBeCloseTo(2000000, 2);
+    expect(moneyOutput("incomeKpiNetShare")).toBeCloseTo(51572.2, 2);
   });
 });

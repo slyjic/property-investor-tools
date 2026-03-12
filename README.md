@@ -8,14 +8,17 @@ A static multi-tool site for property investors.
   - Sale proceeds after selling costs, CGT estimate, and mortgage payout
   - Ownership share support
   - Tax year switching (2025-26, 2026-27, 2027-28)
+  - Scenario actions: save/load/reset, JSON import/export
   - PDF report export
 - Performance Calculator
   - Annual category totals and monthly cashflow tracking
   - Net annual/monthly outcomes, margin, and yield views
+  - Scenario actions: save/load/reset, JSON import/export
   - Quick monthly entry actions and quarterly rollups
 - Simple Investment Fund Calculator
   - Monthly income projection from a capital-stable model
   - 4.00% + RBA cash rate return assumption
+  - Scenario actions: save/load/reset, JSON import/export
   - 12-month distribution schedule and summary
 
 ## Files
