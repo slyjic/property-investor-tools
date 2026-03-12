@@ -33,6 +33,9 @@ const run = async () => {
     await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
     add("net-tab-visible", true);
 
+    const portfolioPdfButtonVisible = await page.locator("#downloadPortfolioSummaryPdf").isVisible();
+    add("portfolio-pdf-button-visible", portfolioPdfButtonVisible);
+
     // Net proceeds: live update
     await page.fill("#salePrice", "1000000");
     await page.fill("#purchasePrice", "600000");

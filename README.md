@@ -2,6 +2,8 @@
 
 A static multi-tool site for property investors.
 
+Includes a global portfolio summary PDF export from the page header.
+
 ## Included tools
 
 - Net Proceeds Calculator
