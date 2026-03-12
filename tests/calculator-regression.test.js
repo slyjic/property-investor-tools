@@ -242,6 +242,17 @@ describe("net proceeds calculator regression", () => {
 });
 
 describe("performance calculator regression", () => {
+  it("keeps statement data hub separate and opens on demand", () => {
+    const modal = byId("incomeDataHubModal");
+    expect(modal.hidden).toBe(true);
+
+    byId("incomeDataHubOpen").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(modal.hidden).toBe(false);
+
+    byId("incomeDataHubClose").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(modal.hidden).toBe(true);
+  });
+
   it("loads default annual and monthly metrics", () => {
     expect(moneyOutput("incomeAnnualNet")).toBeCloseTo(206288.78, 2);
     expect(moneyOutput("incomeKpiNetShare")).toBeCloseTo(206288.78, 2);
@@ -320,6 +331,34 @@ describe("performance calculator regression", () => {
     expect(parseMoneyText(augFees.value)).toBeCloseTo(111, 2);
   });
 
+  it("imports CSV monthly rows and applies them to the statement table", async () => {
+    const fileInput = byId("incomeStatementImportFile");
+    const csv = `Month,Income,Expenses,Fees,Disbursement
+Jul 2024,1000,100,50,500
+Aug 2024,2000,300,100,1200`;
+    const file = new window.File([csv], "owner-statement.csv", {
+      type: "text/csv",
+    });
+
+    Object.defineProperty(fileInput, "files", {
+      value: [file],
+      configurable: true,
+    });
+    fire(fileInput, "change");
+
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+
+    const applyButton = byId("incomeStatementImportApply");
+    expect(applyButton.disabled).toBe(false);
+
+    applyButton.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(moneyOutput("incomeTableTotalNet")).toBeCloseTo(162610.61, 2);
+    expect(textOutput("incomeStatementImportStatus")).toContain("Applied 2 months");
+  });
+
   it("flags health as needs attention when all months are loss-making", () => {
     const julyIncome = document.querySelector("input[data-month-index='0'][data-month-field='income']");
     const julyExpenses = document.querySelector("input[data-month-index='0'][data-month-field='expenses']");
@@ -337,6 +376,21 @@ describe("performance calculator regression", () => {
     byId("incomeApplySourceToAll").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 
     expect(textOutput("incomeHealthStatus")).toBe("Needs Attention");
+  });
+});
+
+describe("simple performance calculator regression", () => {
+  it("loads default annual snapshot metrics", () => {
+    expect(moneyOutput("simplePerfAnnualNet")).toBeCloseTo(206288.78, 2);
+    expect(moneyOutput("simplePerfNetShare")).toBeCloseTo(206288.78, 2);
+    expect(percentOutput("simplePerfNetMargin")).toBeCloseTo(77.17, 2);
+  });
+
+  it("scales annual net by ownership share", () => {
+    setInput("simplePerfOwnershipPercent", "25");
+
+    expect(moneyOutput("simplePerfNetShare")).toBeCloseTo(51572.2, 2);
+    expect(moneyOutput("simplePerfMonthlyShare")).toBeCloseTo(4297.68, 2);
   });
 });
 
@@ -395,7 +449,7 @@ describe("scenario persistence", () => {
     setCheckbox("cgtDiscount", false);
 
     scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    const stored = window.localStorage.getItem("pit:scenario:net-proceeds:fy-2025-26");
+    const stored = window.localStorage.getItem("pit:scenario:net-proceeds");
     expect(stored).toBeTruthy();
 
     setInput("salePrice", "800000");
@@ -411,31 +465,19 @@ describe("scenario persistence", () => {
     expect(byId("cgtDiscount").checked).toBe(false);
   });
 
-  it("keeps separate net proceeds scenarios by dataset year", () => {
+  it("stores net proceeds scenario in a single key", () => {
     setInput("salePrice", "1000000");
     scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-
-    setSelect("netDatasetYear", "fy-2026-27");
-    setInput("salePrice", "2000000");
-    scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-
-    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2025-26")).toBeTruthy();
-    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2026-27")).toBeTruthy();
-
-    setSelect("netDatasetYear", "fy-2025-26");
-    expect(moneyInput("salePrice")).toBeCloseTo(1000000, 2);
-    setSelect("netDatasetYear", "fy-2026-27");
-    expect(moneyInput("salePrice")).toBeCloseTo(2000000, 2);
+    expect(window.localStorage.getItem("pit:scenario:net-proceeds")).toBeTruthy();
+    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2025-26")).toBeNull();
+    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2026-27")).toBeNull();
   });
 
   it("resets fund inputs to defaults and clears saved state", () => {
     setInput("fundInvestmentAmount", "500000");
-    scenarioButton("simple-fund", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(window.localStorage.getItem("pit:scenario:simple-fund:fy-2025-26")).toBeTruthy();
 
     scenarioButton("simple-fund", "reset").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 
-    expect(window.localStorage.getItem("pit:scenario:simple-fund:fy-2025-26")).toBeNull();
     expect(moneyInput("fundInvestmentAmount")).toBeCloseTo(100000, 2);
     expect(moneyOutput("fundAnnualDistribution")).toBeCloseTo(7850, 2);
   });
@@ -469,24 +511,12 @@ describe("scenario persistence", () => {
     expect(window.localStorage.getItem("pit:scenario:performance:fy-2024-25")).toBeTruthy();
   });
 
-  it("restores last used dataset year on reload", async () => {
-    setSelect("fundDatasetYear", "fy-2027-28");
-    scenarioButton("simple-fund", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+  it("restores net proceeds saved values on reload", async () => {
+    setInput("salePrice", "3456789");
+    scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 
     await loadApp();
-    expect(byId("fundDatasetYear").value).toBe("fy-2027-28");
-  });
-
-  it("shows unsaved-change hint when switching dataset year", () => {
-    setInput("salePrice", "1111111");
-    setSelect("netDatasetYear", "fy-2026-27");
-
-    const status = document.querySelector("[data-scenario-tool='net-proceeds'] [data-scenario-status]");
-    if (!status) {
-      throw new Error("Missing net proceeds scenario status");
-    }
-
-    expect(String(status.textContent ?? "")).toContain("Unsaved edits were auto-saved before switching");
+    expect(moneyInput("salePrice")).toBeCloseTo(3456789, 2);
   });
 
   it("renders multi-year trend panel when two performance datasets are saved", () => {

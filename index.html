@@ -12,60 +12,87 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script defer src="app.bundle.js"></script>
   </head>
   <body>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <p class="eyebrow">AU Investment Property Toolkit</p>
+        <h1 id="site-title">Property Investor Tools</h1>
+        <p class="intro">
+          Use the menu to switch between calculators. More tools can be added here over time.
+        </p>
+        <div class="portfolio-actions">
+          <button class="button-primary" id="downloadPortfolioSummaryPdf" type="button">
+            Download Portfolio Summary PDF
+          </button>
+          <p class="pdf-status" id="portfolioPdfStatus" aria-live="polite"></p>
+        </div>
+      </div>
+    </header>
     <main class="page-shell">
       <section class="calculator-card tool-suite" aria-labelledby="site-title">
-        <header class="header-block">
-          <p class="eyebrow">AU Investment Property Toolkit</p>
-          <h1 id="site-title">Property Investor Tools</h1>
-          <p class="intro">
-            Use the menu to switch between calculators. More tools can be added here over time.
-          </p>
-          <div class="portfolio-actions">
-            <button class="button-primary" id="downloadPortfolioSummaryPdf" type="button">
-              Download Portfolio Summary PDF
+        <div class="tool-nav-shell">
+          <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
+            <button
+              class="tool-tab is-active"
+              id="tab-net-proceeds"
+              type="button"
+              role="tab"
+              data-tool-tab="tool-net-proceeds"
+              aria-controls="tool-net-proceeds"
+              aria-selected="true"
+            >
+              Net Proceeds
             </button>
-            <p class="pdf-status" id="portfolioPdfStatus" aria-live="polite"></p>
+            <button
+              class="tool-tab"
+              id="tab-simple-performance"
+              type="button"
+              role="tab"
+              data-tool-tab="tool-simple-performance"
+              aria-controls="tool-simple-performance"
+              aria-selected="false"
+            >
+              Simple Performance
+            </button>
+            <button
+              class="tool-tab"
+              id="tab-investment-income"
+              type="button"
+              role="tab"
+              data-tool-tab="tool-investment-income"
+              aria-controls="tool-investment-income"
+              aria-selected="false"
+              aria-disabled="true"
+              title="Advanced Performance Calculator is temporarily disabled"
+              disabled
+            >
+              Advanced Performance (Disabled)
+            </button>
+            <button
+              class="tool-tab"
+              id="tab-simple-fund"
+              type="button"
+              role="tab"
+              data-tool-tab="tool-simple-fund"
+              aria-controls="tool-simple-fund"
+              aria-selected="false"
+            >
+              Simple Fund
+            </button>
+          </nav>
+          <div class="tool-menu-mobile">
+            <label class="visually-hidden" for="toolMenuSelect">Choose calculator</label>
+            <select id="toolMenuSelect" aria-label="Choose calculator">
+              <option value="tool-net-proceeds">Net Proceeds</option>
+              <option value="tool-simple-performance">Simple Performance</option>
+              <option value="tool-investment-income" disabled>Advanced Performance (Disabled)</option>
+              <option value="tool-simple-fund">Simple Fund</option>
+            </select>
           </div>
-        </header>
-
-        <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
-          <button
-            class="tool-tab is-active"
-            id="tab-net-proceeds"
-            type="button"
-            role="tab"
-            data-tool-tab="tool-net-proceeds"
-            aria-controls="tool-net-proceeds"
-            aria-selected="true"
-          >
-            Net Proceeds Calculator
-          </button>
-          <button
-            class="tool-tab"
-            id="tab-investment-income"
-            type="button"
-            role="tab"
-            data-tool-tab="tool-investment-income"
-            aria-controls="tool-investment-income"
-            aria-selected="false"
-          >
-            Performance Calculator
-          </button>
-          <button
-            class="tool-tab"
-            id="tab-simple-fund"
-            type="button"
-            role="tab"
-            data-tool-tab="tool-simple-fund"
-            aria-controls="tool-simple-fund"
-            aria-selected="false"
-          >
-            Simple Investment Fund
-          </button>
-        </nav>
+        </div>
 
         <section
           class="tool-panel is-active"
@@ -86,25 +113,60 @@
               data-scenario-controls
               data-scenario-tool="net-proceeds"
               data-scenario-form="property-calculator"
-              data-scenario-dataset-input="netDatasetYear"
             >
-              <div class="scenario-dataset">
-                <label for="netDatasetYear">Dataset year</label>
-                <select id="netDatasetYear" name="netDatasetYear">
-                  <option value="fy-2024-25">FY 2024-25</option>
-                  <option value="fy-2025-26" selected>FY 2025-26</option>
-                  <option value="fy-2026-27">FY 2026-27</option>
-                  <option value="fy-2027-28">FY 2027-28</option>
-                  <option value="fy-2028-29">FY 2028-29</option>
-                </select>
-                <span class="dataset-badge" data-scenario-badge></span>
-              </div>
-              <div class="scenario-actions-row">
-                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
-                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
-                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
-                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
-                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
+              <div class="scenario-actions-main">
+                <details class="scenario-menu" data-scenario-menu>
+                  <summary class="scenario-menu-trigger" aria-label="Scenario actions" title="Scenario actions">
+                    <span class="scenario-menu-trigger-icon" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                        <path d="M3 5h10M3 8h10M3 11h10" />
+                      </svg>
+                    </span>
+                    <span class="visually-hidden">Scenario actions</span>
+                  </summary>
+                  <div class="scenario-menu-list">
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="save">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M3.5 2.5h8l1 1v10h-9zM5 2.5v3.4h6V2.5M5.2 9.2h5.6v2.8H5.2z" />
+                        </svg>
+                      </span>
+                      <span>Save</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="load">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 3.2v6.2M5.6 7l2.4 2.4L10.4 7M3.2 12.2h9.6" />
+                        </svg>
+                      </span>
+                      <span>Load</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="reset">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M12.4 6.4a4.8 4.8 0 1 1-1.4-2.6M12.4 3.4v3h-3" />
+                        </svg>
+                      </span>
+                      <span>Reset</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="export">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 12.4V4.6M5.6 7l2.4-2.4L10.4 7M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Export JSON</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="import">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 3.2v7.8M5.6 8.6L8 11l2.4-2.4M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Import JSON</span>
+                    </button>
+                  </div>
+                </details>
               </div>
               <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
               <p class="scenario-status" data-scenario-status aria-live="polite"></p>
@@ -534,6 +596,178 @@
 
         <section
           class="tool-panel"
+          id="tool-simple-performance"
+          data-tool-panel
+          role="tabpanel"
+          hidden
+          aria-labelledby="tab-simple-performance"
+        >
+          <div class="tool-panel-head">
+            <h2>Simple Performance Calculator</h2>
+            <p class="tool-description">
+              Quick annual snapshot using one year of income, expenses, and fees.
+            </p>
+            <p class="tool-description tool-context">
+              No statement uploads or monthly detail in this version. Use the Advanced tool for month-level tracking.
+            </p>
+          </div>
+          <div class="mobile-summary-bar" aria-label="Mobile quick summary">
+            <div class="mobile-summary-metric">
+              <p>Net operating (your share)</p>
+              <strong id="mobileSimplePerfNet">$0.00</strong>
+            </div>
+            <div class="mobile-summary-actions">
+              <button class="mobile-summary-btn" type="button" data-scroll-target="simple-performance-calculator">
+                Inputs
+              </button>
+              <button class="mobile-summary-btn" type="button" data-scroll-target="simplePerfResultsDock">
+                Results
+              </button>
+            </div>
+          </div>
+          <nav class="tool-jump-nav" aria-label="Simple performance sections">
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAsset">
+              Asset Setup
+            </button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAnnual">
+              Annual Totals
+            </button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfResultsDock">
+              Snapshot
+            </button>
+          </nav>
+
+          <div class="layout-grid">
+            <form class="input-grid simple-performance-form" id="simple-performance-calculator" novalidate>
+              <section class="panel" id="simplePerfSectionAsset" aria-labelledby="simple-perf-asset-title">
+                <h3 id="simple-perf-asset-title">1. Asset Setup</h3>
+                <div class="field-grid">
+                  <div class="field-item">
+                    <label for="simplePerfPropertyValue">Asset value</label>
+                    <input
+                      id="simplePerfPropertyValue"
+                      name="simplePerfPropertyValue"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$1,100,000"
+                    />
+                  </div>
+                  <div class="field-item">
+                    <label for="simplePerfOwnershipPercent">Ownership share (%)</label>
+                    <input
+                      id="simplePerfOwnershipPercent"
+                      name="simplePerfOwnershipPercent"
+                      type="number"
+                      inputmode="decimal"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value="100"
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel" id="simplePerfSectionAnnual" aria-labelledby="simple-perf-annual-title">
+                <h3 id="simple-perf-annual-title">2. Annual Totals</h3>
+                <p class="note">
+                  Enter annual totals for one financial year to get a quick performance snapshot.
+                </p>
+                <div class="field-grid">
+                  <div class="field-item">
+                    <label for="simplePerfAnnualIncome">Annual income</label>
+                    <input
+                      id="simplePerfAnnualIncome"
+                      name="simplePerfAnnualIncome"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$0"
+                    />
+                  </div>
+                  <div class="field-item">
+                    <label for="simplePerfAnnualExpenses">Annual expenses</label>
+                    <input
+                      id="simplePerfAnnualExpenses"
+                      name="simplePerfAnnualExpenses"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$0"
+                    />
+                  </div>
+                  <div class="field-item">
+                    <label for="simplePerfAnnualFees">Annual fees</label>
+                    <input
+                      id="simplePerfAnnualFees"
+                      name="simplePerfAnnualFees"
+                      type="text"
+                      inputmode="decimal"
+                      data-currency="true"
+                      autocomplete="off"
+                      placeholder="$0"
+                    />
+                  </div>
+                </div>
+              </section>
+            </form>
+
+            <section class="panel panel-results results-panel-standard" id="simplePerfResultsDock">
+              <h3>3. Annual Snapshot</h3>
+              <section class="results-hero results-hero-performance" aria-label="Primary simple performance outcome">
+                <p class="results-hero-label">Net operating cashflow (your share)</p>
+                <p
+                  class="results-hero-value"
+                  id="simplePerfNetShare"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  $0.00
+                </p>
+                <p class="results-hero-note">
+                  Health:
+                  <span class="inline-health-status" id="simplePerfHealthStatus">-</span>
+                  <span class="inline-health-note" id="simplePerfHealthNote">Enter annual totals to see a health summary.</span>
+                </p>
+              </section>
+
+              <dl class="result-list result-list-key">
+                <div>
+                  <dt>Annual net operating cashflow</dt>
+                  <dd id="simplePerfAnnualNet">$0.00</dd>
+                </div>
+                <div>
+                  <dt>Gross yield</dt>
+                  <dd id="simplePerfGrossYield">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Net yield</dt>
+                  <dd id="simplePerfNetYield">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Net margin</dt>
+                  <dd id="simplePerfNetMargin">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Cost ratio</dt>
+                  <dd id="simplePerfCostRatio">0.00%</dd>
+                </div>
+                <div>
+                  <dt>Your average monthly net</dt>
+                  <dd id="simplePerfMonthlyShare">$0.00</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        </section>
+
+        <section
+          class="tool-panel"
           id="tool-investment-income"
           data-tool-panel
           role="tabpanel"
@@ -541,41 +775,14 @@
           aria-labelledby="tab-investment-income"
         >
           <div class="tool-panel-head">
-            <h2>Commercial Asset Performance Calculator</h2>
+            <h2>Advanced Performance Calculator</h2>
             <p class="tool-description">
-              Statement-based view of income, costs, and net cashflow with yield and margin metrics.
+              Statement-based monthly and annual performance tracking over time, including imports and dataset history.
             </p>
             <p class="tool-description tool-context">
               For valuation, combine this income view with lease quality, location demand, and comparable sales.
             </p>
-            <div
-              class="scenario-actions"
-              data-scenario-controls
-              data-scenario-tool="performance"
-              data-scenario-form="investment-income-calculator"
-              data-scenario-dataset-input="incomeDatasetYear"
-            >
-              <div class="scenario-dataset">
-                <label for="incomeDatasetYear">Year dataset</label>
-                <select id="incomeDatasetYear" name="incomeDatasetYear">
-                  <option value="fy-2024-25" selected>FY 2024-25</option>
-                  <option value="fy-2025-26">FY 2025-26</option>
-                  <option value="fy-2026-27">FY 2026-27</option>
-                  <option value="fy-2027-28">FY 2027-28</option>
-                  <option value="fy-2028-29">FY 2028-29</option>
-                </select>
-                <span class="dataset-badge" data-scenario-badge></span>
-              </div>
-              <div class="scenario-actions-row">
-                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
-                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
-                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
-                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
-                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
-              </div>
-              <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
-              <p class="scenario-status" data-scenario-status aria-live="polite"></p>
-            </div>
+            <button class="statement-action-btn" id="incomeDataHubOpenHead" type="button">Open Statement Data Hub</button>
           </div>
           <div class="mobile-summary-bar" aria-label="Mobile quick summary">
             <div class="mobile-summary-metric">
@@ -590,7 +797,7 @@
           <nav class="tool-jump-nav" aria-label="Performance sections">
             <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionBaseline">Asset Baseline</button>
             <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionTotals">Annual Totals</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="incomeSectionMonthly">Monthly Performance</button>
+            <button class="tool-jump-btn" id="incomeDataHubOpenNav" type="button">Statement Data Hub</button>
             <button class="tool-jump-btn" type="button" data-scroll-target="incomeResultsDock">Outcomes</button>
           </nav>
 
@@ -665,6 +872,12 @@
 
               <section class="panel income-panel income-panel-categories" id="incomeSectionTotals" aria-labelledby="income-categories-title">
                 <h3 id="income-categories-title">2. Annual Category Totals</h3>
+                <p class="note note-compact">
+                  Upload and manage statement data in the Statement Data Hub, then review compiled annual performance here.
+                </p>
+                <button class="statement-action-btn statement-action-btn-secondary" id="incomeDataHubOpen" type="button">
+                  Open Statement Data Hub
+                </button>
 
                 <div class="category-layout">
                   <div class="category-group category-group-income">
@@ -915,115 +1128,247 @@
                 </div>
               </section>
 
-              <section class="panel income-panel income-panel-monthly" id="incomeSectionMonthly" aria-labelledby="income-monthly-title">
-                <h3 id="income-monthly-title">3. Monthly Operating Performance (Jul 2024 - Jun 2025)</h3>
-                <p class="note">
-                  Enter monthly statement totals. Net cashflow and margin update live by month and full year.
-                </p>
-                <div class="statement-snapshot">
-                  <div class="statement-snapshot-item">
-                    <p>Gross income (FY)</p>
-                    <strong id="incomeMonthlyStripIncome">$0.00</strong>
+              <div class="data-hub-modal" id="incomeDataHubModal" hidden aria-hidden="true">
+                <div class="data-hub-backdrop" id="incomeDataHubBackdrop"></div>
+                <section class="panel income-panel income-panel-monthly data-hub-panel" id="incomeSectionMonthly" aria-labelledby="income-monthly-title">
+                  <div class="data-hub-header">
+                    <h3 id="income-monthly-title">
+                      Statement Data Hub
+                      <span class="monthly-range" id="incomeMonthlyRange">(Jul 2024 - Jun 2025)</span>
+                    </h3>
+                    <button class="statement-action-btn statement-action-btn-secondary" id="incomeDataHubClose" type="button">
+                      Close
+                    </button>
                   </div>
-                  <div class="statement-snapshot-item">
-                    <p>Net operating cashflow (FY)</p>
-                    <strong id="incomeMonthlyStripNet">$0.00</strong>
-                  </div>
-                  <div class="statement-snapshot-item">
-                    <p>Avg monthly net operating</p>
-                    <strong id="incomeMonthlyStripAvg">$0.00</strong>
-                  </div>
-                  <div class="statement-snapshot-item">
-                    <p>Positive months</p>
-                    <strong id="incomeMonthlyStripPositive">0 / 12</strong>
-                  </div>
-                </div>
+                  <p class="note">
+                    Import PDF/CSV statements, progressively build each financial year, and store compiled monthly data for reporting.
+                  </p>
 
-                <div class="statement-actions" aria-label="Monthly entry quick actions">
-                  <div class="statement-action-line">
-                    <label for="incomeApplySourceMonth">Copy one month across all months</label>
-                    <div class="statement-action-controls">
-                      <select id="incomeApplySourceMonth" name="incomeApplySourceMonth">
-                        <option value="0">Jul 2024</option>
-                        <option value="1">Aug 2024</option>
-                        <option value="2">Sep 2024</option>
-                        <option value="3">Oct 2024</option>
-                        <option value="4">Nov 2024</option>
-                        <option value="5">Dec 2024</option>
-                        <option value="6">Jan 2025</option>
-                        <option value="7">Feb 2025</option>
-                        <option value="8">Mar 2025</option>
-                        <option value="9">Apr 2025</option>
-                        <option value="10">May 2025</option>
-                        <option value="11">Jun 2025</option>
-                      </select>
-                      <button class="statement-action-btn" id="incomeApplySourceToAll" type="button">Apply to all</button>
+                  <div
+                    class="scenario-actions data-hub-scenario-actions"
+                    data-scenario-controls
+                    data-scenario-tool="performance"
+                    data-scenario-form="investment-income-calculator"
+                    data-scenario-dataset-input="incomeDatasetYear"
+                  >
+                    <div class="scenario-actions-main">
+                      <div class="scenario-dataset">
+                        <label for="incomeDatasetYear">Year dataset</label>
+                        <select id="incomeDatasetYear" name="incomeDatasetYear">
+                          <option value="fy-2024-25" selected>FY 2024-25</option>
+                          <option value="fy-2025-26">FY 2025-26</option>
+                          <option value="fy-2026-27">FY 2026-27</option>
+                          <option value="fy-2027-28">FY 2027-28</option>
+                          <option value="fy-2028-29">FY 2028-29</option>
+                        </select>
+                        <span class="dataset-badge" data-scenario-badge></span>
+                      </div>
+                      <details class="scenario-menu" data-scenario-menu>
+                        <summary class="scenario-menu-trigger" aria-label="Dataset actions" title="Dataset actions">
+                          <span class="scenario-menu-trigger-icon" aria-hidden="true">
+                            <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                              <path d="M3 5h10M3 8h10M3 11h10" />
+                            </svg>
+                          </span>
+                          <span class="visually-hidden">Dataset actions</span>
+                        </summary>
+                        <div class="scenario-menu-list">
+                          <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="save">
+                            <span class="scenario-menu-item-icon" aria-hidden="true">
+                              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                                <path d="M3.5 2.5h8l1 1v10h-9zM5 2.5v3.4h6V2.5M5.2 9.2h5.6v2.8H5.2z" />
+                              </svg>
+                            </span>
+                            <span>Save</span>
+                          </button>
+                          <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="load">
+                            <span class="scenario-menu-item-icon" aria-hidden="true">
+                              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                                <path d="M8 3.2v6.2M5.6 7l2.4 2.4L10.4 7M3.2 12.2h9.6" />
+                              </svg>
+                            </span>
+                            <span>Load</span>
+                          </button>
+                          <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="reset">
+                            <span class="scenario-menu-item-icon" aria-hidden="true">
+                              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                                <path d="M12.4 6.4a4.8 4.8 0 1 1-1.4-2.6M12.4 3.4v3h-3" />
+                              </svg>
+                            </span>
+                            <span>Reset</span>
+                          </button>
+                          <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="export">
+                            <span class="scenario-menu-item-icon" aria-hidden="true">
+                              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                                <path d="M8 12.4V4.6M5.6 7l2.4-2.4L10.4 7M3.2 12.8h9.6" />
+                              </svg>
+                            </span>
+                            <span>Export JSON</span>
+                          </button>
+                          <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="import">
+                            <span class="scenario-menu-item-icon" aria-hidden="true">
+                              <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                                <path d="M8 3.2v7.8M5.6 8.6L8 11l2.4-2.4M3.2 12.8h9.6" />
+                              </svg>
+                            </span>
+                            <span>Import JSON</span>
+                          </button>
+                        </div>
+                      </details>
+                    </div>
+                    <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
+                    <p class="scenario-status" data-scenario-status aria-live="polite"></p>
+                  </div>
+
+                  <div class="statement-snapshot">
+                    <div class="statement-snapshot-item">
+                      <p>Gross income (FY)</p>
+                      <strong id="incomeMonthlyStripIncome">$0.00</strong>
+                    </div>
+                    <div class="statement-snapshot-item">
+                      <p>Net operating cashflow (FY)</p>
+                      <strong id="incomeMonthlyStripNet">$0.00</strong>
+                    </div>
+                    <div class="statement-snapshot-item">
+                      <p>Avg monthly net operating</p>
+                      <strong id="incomeMonthlyStripAvg">$0.00</strong>
+                    </div>
+                    <div class="statement-snapshot-item">
+                      <p>Positive months</p>
+                      <strong id="incomeMonthlyStripPositive">0 / 12</strong>
                     </div>
                   </div>
-                  <button class="statement-action-btn statement-action-btn-secondary" id="incomeCopyPrevAcross" type="button">
-                    Fill forward from previous month
-                  </button>
-                </div>
 
-                <div class="statement-table-wrap" tabindex="0" aria-label="Monthly statement table (scroll horizontally)">
-                  <table class="statement-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">Month</th>
-                        <th scope="col">Income</th>
-                        <th scope="col">Expenses</th>
-                        <th scope="col">Mgmt Fees</th>
-                        <th scope="col">Owner Draw</th>
-                        <th scope="col">Net Cashflow</th>
-                        <th scope="col">Margin</th>
-                      </tr>
-                    </thead>
-                    <tbody id="incomeStatementRows"></tbody>
-                    <tfoot>
-                      <tr class="statement-total-row">
-                        <th scope="row">Total FY</th>
-                        <td id="incomeTableTotalIncome">$0.00</td>
-                        <td id="incomeTableTotalExpenses">$0.00</td>
-                        <td id="incomeTableTotalFees">$0.00</td>
-                        <td id="incomeTableTotalDisbursement">$0.00</td>
-                        <td id="incomeTableTotalNet">$0.00</td>
-                        <td id="incomeTableTotalMargin">0.00%</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-                <div class="mobile-card-controls" aria-label="Monthly card display controls">
-                  <button class="mobile-card-toggle" id="incomeCardsExpand" type="button">Expand all months</button>
-                  <button class="mobile-card-toggle" id="incomeCardsCollapse" type="button">Collapse all months</button>
-                </div>
-                <div class="statement-cards" id="incomeStatementCards" aria-label="Monthly operating performance cards"></div>
-
-                <div class="quarter-rollups" aria-label="Quarterly rollups">
-                  <h4 class="section-subtitle">Quarter Rollups</h4>
-                  <div class="quarter-rollup-grid">
-                    <article class="quarter-rollup-card">
-                      <p>Q1 (Jul-Sep)</p>
-                      <strong id="incomeQuarter1Net">$0.00</strong>
-                      <span id="incomeQuarter1Margin">0.00%</span>
-                    </article>
-                    <article class="quarter-rollup-card">
-                      <p>Q2 (Oct-Dec)</p>
-                      <strong id="incomeQuarter2Net">$0.00</strong>
-                      <span id="incomeQuarter2Margin">0.00%</span>
-                    </article>
-                    <article class="quarter-rollup-card">
-                      <p>Q3 (Jan-Mar)</p>
-                      <strong id="incomeQuarter3Net">$0.00</strong>
-                      <span id="incomeQuarter3Margin">0.00%</span>
-                    </article>
-                    <article class="quarter-rollup-card">
-                      <p>Q4 (Apr-Jun)</p>
-                      <strong id="incomeQuarter4Net">$0.00</strong>
-                      <span id="incomeQuarter4Margin">0.00%</span>
-                    </article>
+                  <div class="statement-actions" aria-label="Monthly entry quick actions">
+                    <div class="statement-action-line">
+                      <label for="incomeApplySourceMonth">Copy one month across all months</label>
+                      <div class="statement-action-controls">
+                        <select id="incomeApplySourceMonth" name="incomeApplySourceMonth">
+                          <option value="0">Jul 2024</option>
+                          <option value="1">Aug 2024</option>
+                          <option value="2">Sep 2024</option>
+                          <option value="3">Oct 2024</option>
+                          <option value="4">Nov 2024</option>
+                          <option value="5">Dec 2024</option>
+                          <option value="6">Jan 2025</option>
+                          <option value="7">Feb 2025</option>
+                          <option value="8">Mar 2025</option>
+                          <option value="9">Apr 2025</option>
+                          <option value="10">May 2025</option>
+                          <option value="11">Jun 2025</option>
+                        </select>
+                        <button class="statement-action-btn" id="incomeApplySourceToAll" type="button">Apply to all</button>
+                      </div>
+                    </div>
+                    <button class="statement-action-btn statement-action-btn-secondary" id="incomeCopyPrevAcross" type="button">
+                      Fill forward from previous month
+                    </button>
+                    <button class="statement-action-btn statement-action-btn-secondary" id="incomeStatementImportOpen" type="button">
+                      Import statement (CSV/PDF)
+                    </button>
                   </div>
-                </div>
-              </section>
+
+                  <details class="statement-import-wizard" id="incomeStatementImportWizard" open>
+                    <summary>Import monthly statement file (CSV or PDF)</summary>
+                    <p class="note">
+                      Upload statement totals, preview month matches, then apply them to the monthly performance table.
+                    </p>
+                    <div class="statement-import-controls">
+                      <label class="statement-import-picker" for="incomeStatementImportFile">Select file</label>
+                      <input
+                        id="incomeStatementImportFile"
+                        name="incomeStatementImportFile"
+                        type="file"
+                        accept=".csv,text/csv,.txt,application/pdf,.pdf"
+                      />
+                      <button class="statement-action-btn" id="incomeStatementImportApply" type="button" disabled>
+                        Apply imported months
+                      </button>
+                    </div>
+                    <label class="statement-import-sync">
+                      <input id="incomeStatementImportSyncAnnual" name="incomeStatementImportSyncAnnual" type="checkbox" checked />
+                      Also update annual category totals from imported monthly totals
+                    </label>
+                    <p class="statement-import-file" id="incomeStatementImportFileName">No file selected.</p>
+                    <p class="statement-import-status" id="incomeStatementImportStatus" role="status" aria-live="polite"></p>
+                    <ul class="statement-import-warnings" id="incomeStatementImportWarnings" hidden></ul>
+
+                    <div class="statement-import-preview-wrap" id="incomeStatementImportPreviewWrap" hidden>
+                      <table class="statement-import-preview-table" aria-label="Statement import preview">
+                        <thead>
+                          <tr>
+                            <th scope="col">Month</th>
+                            <th scope="col">Income</th>
+                            <th scope="col">Expenses</th>
+                            <th scope="col">Mgmt Fees</th>
+                            <th scope="col">Owner Draw</th>
+                          </tr>
+                        </thead>
+                        <tbody id="incomeStatementImportPreviewRows"></tbody>
+                      </table>
+                    </div>
+                  </details>
+
+                  <div class="statement-table-wrap" tabindex="0" aria-label="Monthly statement table (scroll horizontally)">
+                    <table class="statement-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">Month</th>
+                          <th scope="col">Income</th>
+                          <th scope="col">Expenses</th>
+                          <th scope="col">Mgmt Fees</th>
+                          <th scope="col">Owner Draw</th>
+                          <th scope="col">Net Cashflow</th>
+                          <th scope="col">Margin</th>
+                        </tr>
+                      </thead>
+                      <tbody id="incomeStatementRows"></tbody>
+                      <tfoot>
+                        <tr class="statement-total-row">
+                          <th scope="row">Total FY</th>
+                          <td id="incomeTableTotalIncome">$0.00</td>
+                          <td id="incomeTableTotalExpenses">$0.00</td>
+                          <td id="incomeTableTotalFees">$0.00</td>
+                          <td id="incomeTableTotalDisbursement">$0.00</td>
+                          <td id="incomeTableTotalNet">$0.00</td>
+                          <td id="incomeTableTotalMargin">0.00%</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                  <div class="mobile-card-controls" aria-label="Monthly card display controls">
+                    <button class="mobile-card-toggle" id="incomeCardsExpand" type="button">Expand all months</button>
+                    <button class="mobile-card-toggle" id="incomeCardsCollapse" type="button">Collapse all months</button>
+                  </div>
+                  <div class="statement-cards" id="incomeStatementCards" aria-label="Monthly operating performance cards"></div>
+
+                  <div class="quarter-rollups" aria-label="Quarterly rollups">
+                    <h4 class="section-subtitle">Quarter Rollups</h4>
+                    <div class="quarter-rollup-grid">
+                      <article class="quarter-rollup-card">
+                        <p>Q1 (Jul-Sep)</p>
+                        <strong id="incomeQuarter1Net">$0.00</strong>
+                        <span id="incomeQuarter1Margin">0.00%</span>
+                      </article>
+                      <article class="quarter-rollup-card">
+                        <p>Q2 (Oct-Dec)</p>
+                        <strong id="incomeQuarter2Net">$0.00</strong>
+                        <span id="incomeQuarter2Margin">0.00%</span>
+                      </article>
+                      <article class="quarter-rollup-card">
+                        <p>Q3 (Jan-Mar)</p>
+                        <strong id="incomeQuarter3Net">$0.00</strong>
+                        <span id="incomeQuarter3Margin">0.00%</span>
+                      </article>
+                      <article class="quarter-rollup-card">
+                        <p>Q4 (Apr-Jun)</p>
+                        <strong id="incomeQuarter4Net">$0.00</strong>
+                        <span id="incomeQuarter4Margin">0.00%</span>
+                      </article>
+                    </div>
+                  </div>
+                </section>
+              </div>
             </form>
             <section class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock">
               <h3>4. Performance Outcomes</h3>
@@ -1298,25 +1643,44 @@
               data-scenario-controls
               data-scenario-tool="simple-fund"
               data-scenario-form="simple-fund-calculator"
-              data-scenario-dataset-input="fundDatasetYear"
             >
-              <div class="scenario-dataset">
-                <label for="fundDatasetYear">Dataset year</label>
-                <select id="fundDatasetYear" name="fundDatasetYear">
-                  <option value="fy-2024-25">FY 2024-25</option>
-                  <option value="fy-2025-26" selected>FY 2025-26</option>
-                  <option value="fy-2026-27">FY 2026-27</option>
-                  <option value="fy-2027-28">FY 2027-28</option>
-                  <option value="fy-2028-29">FY 2028-29</option>
-                </select>
-                <span class="dataset-badge" data-scenario-badge></span>
-              </div>
-              <div class="scenario-actions-row">
-                <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
-                <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
-                <button class="scenario-btn" type="button" data-scenario-action="reset">Reset</button>
-                <button class="scenario-btn" type="button" data-scenario-action="export">Export JSON</button>
-                <button class="scenario-btn" type="button" data-scenario-action="import">Import JSON</button>
+              <div class="scenario-actions-main">
+                <details class="scenario-menu" data-scenario-menu>
+                  <summary class="scenario-menu-trigger" aria-label="Scenario actions" title="Scenario actions">
+                    <span class="scenario-menu-trigger-icon" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                        <path d="M3 5h10M3 8h10M3 11h10" />
+                      </svg>
+                    </span>
+                    <span class="visually-hidden">Scenario actions</span>
+                  </summary>
+                  <div class="scenario-menu-list">
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="reset">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M12.4 6.4a4.8 4.8 0 1 1-1.4-2.6M12.4 3.4v3h-3" />
+                        </svg>
+                      </span>
+                      <span>Reset</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="export">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 12.4V4.6M5.6 7l2.4-2.4L10.4 7M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Export JSON</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="import">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 3.2v7.8M5.6 8.6L8 11l2.4-2.4M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Import JSON</span>
+                    </button>
+                  </div>
+                </details>
               </div>
               <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
               <p class="scenario-status" data-scenario-status aria-live="polite"></p>

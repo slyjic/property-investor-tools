@@ -1088,6 +1088,474 @@
     calculate();
   };
 
+  // js/import/statementImport.js
+  var MONTH_LOOKUP = {
+    jan: 1,
+    feb: 2,
+    mar: 3,
+    apr: 4,
+    may: 5,
+    jun: 6,
+    jul: 7,
+    aug: 8,
+    sep: 9,
+    sept: 9,
+    oct: 10,
+    nov: 11,
+    dec: 12
+  };
+  var normalizeHeader = (value) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  var parseCsv = (text) => {
+    const rows = [];
+    let row = [];
+    let current = "";
+    let inQuotes = false;
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text[index];
+      const nextChar = text[index + 1];
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          index += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+      if (char === "," && !inQuotes) {
+        row.push(current);
+        current = "";
+        continue;
+      }
+      if ((char === "\n" || char === "\r") && !inQuotes) {
+        if (char === "\r" && nextChar === "\n") {
+          index += 1;
+        }
+        row.push(current);
+        rows.push(row);
+        row = [];
+        current = "";
+        continue;
+      }
+      current += char;
+    }
+    if (current.length > 0 || row.length > 0) {
+      row.push(current);
+      rows.push(row);
+    }
+    return rows.map((cells) => cells.map((cell) => String(cell ?? "").trim())).filter((cells) => cells.some((cell) => cell !== ""));
+  };
+  var toAmount = (value) => {
+    const raw = String(value ?? "").trim();
+    if (!raw) {
+      return null;
+    }
+    const inBrackets = raw.startsWith("(") && raw.endsWith(")");
+    let normalized = raw.replace(/[()$]/g, "").replace(/\s/g, "");
+    if (normalized.includes(",") && normalized.includes(".")) {
+      normalized = normalized.replace(/,/g, "");
+    } else if (normalized.includes(",") && !normalized.includes(".")) {
+      const parts = normalized.split(",");
+      if (parts.length === 2 && parts[1].length <= 2) {
+        normalized = `${parts[0]}.${parts[1]}`;
+      } else {
+        normalized = normalized.replace(/,/g, "");
+      }
+    }
+    normalized = normalized.replace(/[^0-9.-]/g, "");
+    const parsed = Number.parseFloat(normalized);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    return inBrackets ? -Math.abs(parsed) : parsed;
+  };
+  var toYear = (value) => {
+    const parsed = Number.parseInt(String(value ?? ""), 10);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    if (parsed >= 100) {
+      return parsed;
+    }
+    return parsed >= 70 ? 1900 + parsed : 2e3 + parsed;
+  };
+  var parseMonthToken = (value) => {
+    const text = String(value ?? "").toLowerCase().replace(/[,]/g, " ");
+    if (!text.trim()) {
+      return null;
+    }
+    const monthNameMatch = text.match(
+      /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\b(?:[\s\-\/]*([0-9]{2,4}))?/
+    );
+    if (monthNameMatch) {
+      const monthNumber = MONTH_LOOKUP[monthNameMatch[1]];
+      const yearValue = monthNameMatch[2] ? toYear(monthNameMatch[2]) : null;
+      return {
+        monthNumber,
+        yearValue
+      };
+    }
+    const yearMonthMatch = text.match(/\b([0-9]{4})[\/\-]([0-9]{1,2})\b/);
+    if (yearMonthMatch) {
+      return {
+        monthNumber: Number.parseInt(yearMonthMatch[2], 10),
+        yearValue: Number.parseInt(yearMonthMatch[1], 10)
+      };
+    }
+    const monthYearMatch = text.match(/\b([0-9]{1,2})[\/\-]([0-9]{2,4})\b/);
+    if (monthYearMatch) {
+      return {
+        monthNumber: Number.parseInt(monthYearMatch[1], 10),
+        yearValue: toYear(monthYearMatch[2])
+      };
+    }
+    return null;
+  };
+  var createTargetMonthMeta = (targetMonthLabels) => {
+    const exactKeyToLabel = /* @__PURE__ */ new Map();
+    const monthOnlyToLabel = /* @__PURE__ */ new Map();
+    (targetMonthLabels || []).forEach((label) => {
+      const parsed = parseMonthToken(label);
+      if (!parsed || !parsed.monthNumber) {
+        return;
+      }
+      const monthOnlyKey = `${parsed.monthNumber}`;
+      monthOnlyToLabel.set(monthOnlyKey, label);
+      if (parsed.yearValue) {
+        const exactKey = `${parsed.yearValue}-${parsed.monthNumber}`;
+        exactKeyToLabel.set(exactKey, label);
+      }
+    });
+    return {
+      exactKeyToLabel,
+      monthOnlyToLabel
+    };
+  };
+  var resolveTargetLabel = (monthText, targetMonthMeta) => {
+    const parsed = parseMonthToken(monthText);
+    if (!parsed || !parsed.monthNumber) {
+      return "";
+    }
+    if (parsed.yearValue) {
+      const exactLabel = targetMonthMeta.exactKeyToLabel.get(`${parsed.yearValue}-${parsed.monthNumber}`);
+      if (exactLabel) {
+        return exactLabel;
+      }
+    }
+    return targetMonthMeta.monthOnlyToLabel.get(`${parsed.monthNumber}`) || "";
+  };
+  var detectColumns = (headers, hasHeaderRow) => {
+    const indices = Array.from({ length: headers.length }, (_, index) => index);
+    const normalizedHeaders = headers.map(normalizeHeader);
+    const findByPattern = (pattern, excluded = []) => normalizedHeaders.findIndex((header, index) => !excluded.includes(index) && pattern.test(header));
+    let monthIndex = -1;
+    if (hasHeaderRow) {
+      monthIndex = findByPattern(/month|period|statementdate|date/);
+    }
+    if (monthIndex < 0) {
+      monthIndex = 0;
+    }
+    const pickDetectedOrFallback = (detectedIndex, fallbackIndex) => {
+      if (detectedIndex >= 0) {
+        return detectedIndex;
+      }
+      if (Number.isInteger(fallbackIndex) && fallbackIndex >= 0) {
+        return fallbackIndex;
+      }
+      return -1;
+    };
+    const remaining = indices.filter((index) => index !== monthIndex);
+    const incomeIndex = pickDetectedOrFallback(
+      findByPattern(/income|rent|revenue|credit|receipts?/, [monthIndex]),
+      remaining[0]
+    );
+    const expensesIndex = pickDetectedOrFallback(
+      findByPattern(/expenses?|outgoings?|costs?/, [monthIndex, incomeIndex]),
+      remaining[1]
+    );
+    const feesIndex = pickDetectedOrFallback(
+      findByPattern(/fee|management|agency|commission/, [monthIndex, incomeIndex, expensesIndex]),
+      remaining[2]
+    );
+    const disbursementIndex = pickDetectedOrFallback(
+      findByPattern(/draw|disbursement|owner|payment|distribution/, [
+        monthIndex,
+        incomeIndex,
+        expensesIndex,
+        feesIndex
+      ]),
+      remaining[3]
+    );
+    return {
+      monthIndex,
+      incomeIndex,
+      expensesIndex,
+      feesIndex,
+      disbursementIndex
+    };
+  };
+  var toImportedRows = (rowsByLabel) => Array.from(rowsByLabel.values()).map((row) => ({
+    label: row.label,
+    income: row.income ?? 0,
+    expenses: row.expenses ?? 0,
+    fees: row.fees ?? 0,
+    disbursement: row.disbursement ?? 0
+  }));
+  var fillRowValues = (targetRow, values) => {
+    if (!targetRow || !values) {
+      return;
+    }
+    if (values.income !== null) {
+      targetRow.income = values.income;
+    }
+    if (values.expenses !== null) {
+      targetRow.expenses = values.expenses;
+    }
+    if (values.fees !== null) {
+      targetRow.fees = values.fees;
+    }
+    if (values.disbursement !== null) {
+      targetRow.disbursement = values.disbursement;
+    }
+  };
+  var toDetectedMonth = (parsedMonth) => {
+    if (!parsedMonth || !Number.isInteger(parsedMonth.monthNumber) || !Number.isInteger(parsedMonth.yearValue)) {
+      return null;
+    }
+    return {
+      monthNumber: parsedMonth.monthNumber,
+      yearValue: parsedMonth.yearValue
+    };
+  };
+  var isLikelyHeaderRow = (cells) => {
+    const normalized = Array.isArray(cells) ? cells.map(normalizeHeader) : [];
+    const headerHits = normalized.filter(
+      (header) => /(month|period|statementdate|date|income|rent|revenue|credit|receipts?|expenses?|outgoings?|costs?|fee|management|agency|commission|draw|disbursement|owner|payment|distribution)/.test(
+        header
+      )
+    ).length;
+    return headerHits >= 2;
+  };
+  var parseStatementCsv = (text, targetMonthLabels) => {
+    const csvRows = parseCsv(String(text ?? ""));
+    if (csvRows.length < 2) {
+      return {
+        rows: [],
+        warnings: ["CSV did not contain enough rows to import."]
+      };
+    }
+    const targetMonthMeta = createTargetMonthMeta(targetMonthLabels);
+    const likelyHeaderRow = csvRows[0];
+    const hasHeaderRow = isLikelyHeaderRow(likelyHeaderRow);
+    const columns = detectColumns(likelyHeaderRow, hasHeaderRow);
+    const dataRows = hasHeaderRow ? csvRows.slice(1) : csvRows;
+    const rowsByLabel = /* @__PURE__ */ new Map();
+    const warnings = [];
+    const detectedMonths = [];
+    dataRows.forEach((row) => {
+      const monthText = row[columns.monthIndex] || "";
+      const parsedMonth = toDetectedMonth(parseMonthToken(monthText));
+      if (parsedMonth) {
+        detectedMonths.push(parsedMonth);
+      }
+      const targetLabel = resolveTargetLabel(monthText, targetMonthMeta);
+      if (!targetLabel) {
+        return;
+      }
+      const importedRow = rowsByLabel.get(targetLabel) || {
+        label: targetLabel,
+        income: 0,
+        expenses: 0,
+        fees: 0,
+        disbursement: 0
+      };
+      fillRowValues(importedRow, {
+        income: columns.incomeIndex >= 0 ? toAmount(row[columns.incomeIndex]) : null,
+        expenses: columns.expensesIndex >= 0 ? toAmount(row[columns.expensesIndex]) : null,
+        fees: columns.feesIndex >= 0 ? toAmount(row[columns.feesIndex]) : null,
+        disbursement: columns.disbursementIndex >= 0 ? toAmount(row[columns.disbursementIndex]) : null
+      });
+      rowsByLabel.set(targetLabel, importedRow);
+    });
+    const rows = toImportedRows(rowsByLabel);
+    if (!rows.length) {
+      warnings.push("No monthly rows were detected from this CSV.");
+    }
+    return {
+      rows,
+      warnings,
+      detectedMonths
+    };
+  };
+  var extractAmountsFromLine = (line) => {
+    const matches = Array.from(
+      String(line ?? "").matchAll(/\(?-?\$?\d[\d,]*(?:\.\d{1,2})?\)?/g),
+      (match) => toAmount(match[0])
+    ).filter((value) => Number.isFinite(value));
+    if (!matches.length) {
+      return [];
+    }
+    if (matches.length >= 4) {
+      return matches.slice(-4);
+    }
+    if (matches.length === 3) {
+      return [matches[0], matches[1], matches[2], null];
+    }
+    if (matches.length === 2) {
+      return [matches[0], matches[1], null, null];
+    }
+    return [matches[0], null, null, null];
+  };
+  var extractPdfMonthSegments = (text) => {
+    const fullText = String(text ?? "");
+    const monthPattern = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*(?:[\s\-\/]*[0-9]{2,4})?/gi;
+    const matches = Array.from(fullText.matchAll(monthPattern));
+    if (!matches.length) {
+      return [];
+    }
+    return matches.map((match, index) => {
+      const start = typeof match.index === "number" ? match.index : 0;
+      const next = matches[index + 1];
+      const end = next && typeof next.index === "number" ? next.index : fullText.length;
+      return fullText.slice(start, end).trim();
+    }).filter(Boolean);
+  };
+  var parseStatementPdfText = (text, targetMonthLabels) => {
+    const lines = String(text ?? "").replace(/\u00a0/g, " ").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const targetMonthMeta = createTargetMonthMeta(targetMonthLabels);
+    const rowsByLabel = /* @__PURE__ */ new Map();
+    const warnings = [];
+    const detectedMonths = [];
+    lines.forEach((line, index) => {
+      const parsedMonth = toDetectedMonth(parseMonthToken(line));
+      if (parsedMonth) {
+        detectedMonths.push(parsedMonth);
+      }
+      const targetLabel = resolveTargetLabel(line, targetMonthMeta);
+      if (!targetLabel) {
+        return;
+      }
+      let amounts = extractAmountsFromLine(line);
+      if (amounts.filter((value) => Number.isFinite(value)).length < 2 && lines[index + 1]) {
+        amounts = extractAmountsFromLine(`${line} ${lines[index + 1]}`);
+      }
+      if (!amounts.length) {
+        return;
+      }
+      const importedRow = rowsByLabel.get(targetLabel) || {
+        label: targetLabel,
+        income: 0,
+        expenses: 0,
+        fees: 0,
+        disbursement: 0
+      };
+      fillRowValues(importedRow, {
+        income: amounts[0],
+        expenses: amounts[1],
+        fees: amounts[2],
+        disbursement: amounts[3]
+      });
+      rowsByLabel.set(targetLabel, importedRow);
+    });
+    if (!rowsByLabel.size) {
+      const segments = extractPdfMonthSegments(lines.join(" "));
+      segments.forEach((segment) => {
+        const parsedMonth = toDetectedMonth(parseMonthToken(segment));
+        if (parsedMonth) {
+          detectedMonths.push(parsedMonth);
+        }
+        const targetLabel = resolveTargetLabel(segment, targetMonthMeta);
+        if (!targetLabel) {
+          return;
+        }
+        const amounts = extractAmountsFromLine(segment);
+        if (!amounts.length) {
+          return;
+        }
+        const importedRow = rowsByLabel.get(targetLabel) || {
+          label: targetLabel,
+          income: 0,
+          expenses: 0,
+          fees: 0,
+          disbursement: 0
+        };
+        fillRowValues(importedRow, {
+          income: amounts[0],
+          expenses: amounts[1],
+          fees: amounts[2],
+          disbursement: amounts[3]
+        });
+        rowsByLabel.set(targetLabel, importedRow);
+      });
+    }
+    const rows = toImportedRows(rowsByLabel);
+    if (!rows.length) {
+      warnings.push(
+        "Could not detect monthly values in this PDF automatically. Try CSV export or adjust values manually."
+      );
+    }
+    return {
+      rows,
+      warnings,
+      detectedMonths
+    };
+  };
+  var parseStatementPdfFile = async (file, targetMonthLabels) => {
+    if (!file) {
+      return {
+        rows: [],
+        warnings: ["No PDF file selected."]
+      };
+    }
+    if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
+      return {
+        rows: [],
+        warnings: ["PDF parser not available. Refresh and try again."]
+      };
+    }
+    if (window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+    const arrayBuffer = await file.arrayBuffer();
+    const loadingTask = window.pdfjsLib.getDocument({
+      data: arrayBuffer
+    });
+    const pdf = await loadingTask.promise;
+    const pageTexts = [];
+    const toPageLines = (items) => {
+      const lines = [];
+      let currentParts = [];
+      let previousY = null;
+      items.forEach((item) => {
+        const text = String(item?.str ?? "").trim();
+        if (!text) {
+          return;
+        }
+        const yValue = Array.isArray(item?.transform) && Number.isFinite(item.transform[5]) ? item.transform[5] : null;
+        if (currentParts.length > 0 && previousY !== null && yValue !== null && Math.abs(yValue - previousY) > 2.8) {
+          lines.push(currentParts.join(" "));
+          currentParts = [];
+        }
+        currentParts.push(text);
+        if (yValue !== null) {
+          previousY = yValue;
+        }
+      });
+      if (currentParts.length) {
+        lines.push(currentParts.join(" "));
+      }
+      return lines;
+    };
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = toPageLines(textContent.items).join("\n");
+      pageTexts.push(pageText);
+    }
+    const fullText = pageTexts.join("\n");
+    return parseStatementPdfText(fullText, targetMonthLabels);
+  };
+
   // js/calculations/performance.js
   var evaluateHealth = (annualMargin, costToIncome, positiveMonths, totalMonths) => {
     const marginScore = annualMargin >= 55 ? 3 : annualMargin >= 35 ? 2 : annualMargin >= 20 ? 1 : 0;
@@ -1408,11 +1876,275 @@
       historyEmpty: byId("incomeHistoryEmpty"),
       outputHistorySparkline: byId("incomeHistorySparkline"),
       outputHistoryTrendLatest: byId("incomeHistoryTrendLatest"),
-      trendHistoryCard: byId("incomeHistoryTrendCard")
+      trendHistoryCard: byId("incomeHistoryTrendCard"),
+      statementImportFile: byId("incomeStatementImportFile"),
+      statementImportWizard: byId("incomeStatementImportWizard"),
+      statementImportOpenButton: byId("incomeStatementImportOpen"),
+      statementImportApplyButton: byId("incomeStatementImportApply"),
+      statementImportStatus: byId("incomeStatementImportStatus"),
+      statementImportWarnings: byId("incomeStatementImportWarnings"),
+      statementImportPreviewWrap: byId("incomeStatementImportPreviewWrap"),
+      statementImportPreviewRows: byId("incomeStatementImportPreviewRows"),
+      statementImportFileName: byId("incomeStatementImportFileName"),
+      statementImportSyncAnnual: byId("incomeStatementImportSyncAnnual"),
+      monthlyRange: byId("incomeMonthlyRange"),
+      dataHubModal: byId("incomeDataHubModal"),
+      dataHubBackdrop: byId("incomeDataHubBackdrop"),
+      dataHubOpenButton: byId("incomeDataHubOpen"),
+      dataHubOpenHeadButton: byId("incomeDataHubOpenHead"),
+      dataHubOpenNavButton: byId("incomeDataHubOpenNav"),
+      dataHubCloseButton: byId("incomeDataHubClose")
     };
     const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
     let monthRows = [];
     let latestHistoryMetrics = null;
+    let importedStatementRows = [];
+    let isDataHubOpen = false;
+    const monthNamesShort = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ];
+    const fiscalMonthOrder = [7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6];
+    const setStatementImportStatus = (message, tone = "") => {
+      if (!incomeFields.statementImportStatus) {
+        return;
+      }
+      setTextContent(incomeFields.statementImportStatus, message || "");
+      incomeFields.statementImportStatus.classList.remove("is-success", "is-error");
+      if (tone === "success") {
+        incomeFields.statementImportStatus.classList.add("is-success");
+      } else if (tone === "error") {
+        incomeFields.statementImportStatus.classList.add("is-error");
+      }
+    };
+    const setStatementImportWarnings = (warnings = []) => {
+      if (!incomeFields.statementImportWarnings) {
+        return;
+      }
+      clearNodeChildren(incomeFields.statementImportWarnings);
+      const warningList = Array.isArray(warnings) ? warnings.filter((warning) => String(warning ?? "").trim().length > 0) : [];
+      if (!warningList.length) {
+        incomeFields.statementImportWarnings.hidden = true;
+        return;
+      }
+      warningList.forEach((warning) => {
+        const item = document.createElement("li");
+        item.textContent = String(warning);
+        incomeFields.statementImportWarnings.appendChild(item);
+      });
+      incomeFields.statementImportWarnings.hidden = false;
+    };
+    const setStatementImportFileName = (name = "") => {
+      if (!incomeFields.statementImportFileName) {
+        return;
+      }
+      setTextContent(incomeFields.statementImportFileName, name || "No file selected.");
+    };
+    const setStatementImportPreviewRows = (rows = []) => {
+      if (!incomeFields.statementImportPreviewRows || !incomeFields.statementImportPreviewWrap) {
+        return;
+      }
+      clearNodeChildren(incomeFields.statementImportPreviewRows);
+      const safeRows = Array.isArray(rows) ? rows : [];
+      safeRows.forEach((row) => {
+        const tableRow = document.createElement("tr");
+        const labelCell = document.createElement("td");
+        labelCell.textContent = row.label;
+        tableRow.appendChild(labelCell);
+        const incomeCell = document.createElement("td");
+        incomeCell.textContent = formatMoney(Number.isFinite(row.income) ? row.income : 0);
+        tableRow.appendChild(incomeCell);
+        const expensesCell = document.createElement("td");
+        expensesCell.textContent = formatMoney(Number.isFinite(row.expenses) ? row.expenses : 0);
+        tableRow.appendChild(expensesCell);
+        const feesCell = document.createElement("td");
+        feesCell.textContent = formatMoney(Number.isFinite(row.fees) ? row.fees : 0);
+        tableRow.appendChild(feesCell);
+        const disbursementCell = document.createElement("td");
+        disbursementCell.textContent = formatMoney(Number.isFinite(row.disbursement) ? row.disbursement : 0);
+        tableRow.appendChild(disbursementCell);
+        incomeFields.statementImportPreviewRows.appendChild(tableRow);
+      });
+      incomeFields.statementImportPreviewWrap.hidden = safeRows.length === 0;
+    };
+    const setStatementImportRows = (rows = []) => {
+      const validRows = Array.isArray(rows) ? rows.filter((row) => row && typeof row.label === "string" && row.label) : [];
+      importedStatementRows = validRows;
+      if (incomeFields.statementImportApplyButton) {
+        incomeFields.statementImportApplyButton.disabled = validRows.length === 0;
+      }
+      setStatementImportPreviewRows(validRows);
+    };
+    const getStatementImportKind = (file) => {
+      const type = String(file?.type ?? "").toLowerCase();
+      const name = String(file?.name ?? "").toLowerCase();
+      const isPdf = type.includes("pdf") || name.endsWith(".pdf");
+      if (isPdf) {
+        return "pdf";
+      }
+      const isCsv = type.includes("csv") || type.includes("excel") || name.endsWith(".csv") || name.endsWith(".txt");
+      if (isCsv) {
+        return "csv";
+      }
+      return "";
+    };
+    const getDatasetLabel = (datasetId) => {
+      if (!incomeFields.datasetSelector) {
+        return datasetId;
+      }
+      const match = Array.from(incomeFields.datasetSelector.options).find(
+        (option) => option.value === datasetId
+      );
+      return match ? String(match.textContent ?? datasetId).trim() : datasetId;
+    };
+    const parseDatasetStartYear = (datasetId) => {
+      const match = String(datasetId ?? "").match(/^fy-(\d{4})-(\d{2})$/i);
+      if (!match) {
+        return 2024;
+      }
+      const year = Number.parseInt(match[1], 10);
+      return Number.isFinite(year) ? year : 2024;
+    };
+    const toDatasetIdFromStartYear = (startYear) => {
+      const endYearSuffix = String(startYear + 1).slice(-2);
+      return `fy-${startYear}-${endYearSuffix}`;
+    };
+    const buildFiscalMonthLabels = (startYear) => fiscalMonthOrder.map((monthNumber) => {
+      const year = monthNumber >= 7 ? startYear : startYear + 1;
+      return `${monthNamesShort[monthNumber - 1]} ${year}`;
+    });
+    const getCurrentDatasetMonthLabels = () => {
+      const datasetId = incomeFields.datasetSelector ? incomeFields.datasetSelector.value : "fy-2024-25";
+      const startYear = parseDatasetStartYear(datasetId);
+      return buildFiscalMonthLabels(startYear);
+    };
+    const setDataHubOpen = (isOpen) => {
+      isDataHubOpen = Boolean(isOpen);
+      if (incomeFields.dataHubModal) {
+        incomeFields.dataHubModal.hidden = !isDataHubOpen;
+        incomeFields.dataHubModal.setAttribute("aria-hidden", isDataHubOpen ? "false" : "true");
+      }
+      if (document?.body) {
+        document.body.classList.toggle("data-hub-open", isDataHubOpen);
+      }
+    };
+    const populateApplySourceMonthOptions = (labels) => {
+      if (!incomeFields.applySourceMonth) {
+        return;
+      }
+      const selectedValue = Number.parseInt(incomeFields.applySourceMonth.value || "0", 10);
+      clearNodeChildren(incomeFields.applySourceMonth);
+      labels.forEach((label, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = label;
+        incomeFields.applySourceMonth.appendChild(option);
+      });
+      const safeValue = Number.isInteger(selectedValue) && selectedValue >= 0 && selectedValue < labels.length ? selectedValue : 0;
+      incomeFields.applySourceMonth.value = String(safeValue);
+    };
+    const updateStatementLabelsForCurrentDataset = () => {
+      const labels = getCurrentDatasetMonthLabels();
+      monthRows.forEach((rowData, index) => {
+        const nextLabel = labels[index] || rowData.label;
+        rowData.label = nextLabel;
+        if (rowData.monthCell) {
+          rowData.monthCell.textContent = nextLabel;
+        }
+        if (rowData.mobileTitle) {
+          rowData.mobileTitle.textContent = nextLabel;
+        }
+      });
+      populateApplySourceMonthOptions(labels);
+      if (incomeFields.monthlyRange && labels.length) {
+        setTextContent(incomeFields.monthlyRange, `(${labels[0]} - ${labels[labels.length - 1]})`);
+      }
+    };
+    const inferDatasetIdFromDetectedMonths = (detectedMonths = []) => {
+      if (!incomeFields.datasetSelector) {
+        return "";
+      }
+      const scoreByDataset = /* @__PURE__ */ new Map();
+      detectedMonths.forEach((month) => {
+        if (!month || !Number.isInteger(month.monthNumber) || !Number.isInteger(month.yearValue)) {
+          return;
+        }
+        const startYear = month.monthNumber >= 7 ? month.yearValue : month.yearValue - 1;
+        const datasetId = toDatasetIdFromStartYear(startYear);
+        scoreByDataset.set(datasetId, (scoreByDataset.get(datasetId) || 0) + 1);
+      });
+      const validDatasetIds = new Set(
+        Array.from(incomeFields.datasetSelector.options).map((option) => option.value)
+      );
+      let bestId = "";
+      let bestScore = -1;
+      scoreByDataset.forEach((score, datasetId) => {
+        if (!validDatasetIds.has(datasetId)) {
+          return;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          bestId = datasetId;
+        }
+      });
+      return bestId;
+    };
+    const syncAnnualCategoriesFromMonthlyRows = () => {
+      const monthlyTotals = monthRows.reduce(
+        (acc, rowData) => {
+          acc.income += readNumber(rowData.incomeInput);
+          acc.expenses += readNumber(rowData.expensesInput);
+          acc.fees += readNumber(rowData.feesInput);
+          return acc;
+        },
+        { income: 0, expenses: 0, fees: 0 }
+      );
+      if (incomeFields.rentGst) {
+        incomeFields.rentGst.value = toEditableNumberString(monthlyTotals.income);
+      }
+      if (incomeFields.rentGstFree) {
+        incomeFields.rentGstFree.value = "0";
+      }
+      if (incomeFields.outgoingsRecovered) {
+        incomeFields.outgoingsRecovered.value = "0";
+      }
+      if (incomeFields.otherIncome) {
+        incomeFields.otherIncome.value = "0";
+      }
+      if (incomeFields.councilRates) {
+        incomeFields.councilRates.value = toEditableNumberString(monthlyTotals.expenses);
+      }
+      [
+        incomeFields.waterRates,
+        incomeFields.insurance,
+        incomeFields.landTax,
+        incomeFields.gardening,
+        incomeFields.fireSafety,
+        incomeFields.repairs,
+        incomeFields.capex,
+        incomeFields.otherExpenses
+      ].forEach((input) => {
+        if (input) {
+          input.value = "0";
+        }
+      });
+      if (incomeFields.managementFees) {
+        incomeFields.managementFees.value = toEditableNumberString(monthlyTotals.fees);
+      }
+      if (incomeFields.otherFees) {
+        incomeFields.otherFees.value = "0";
+      }
+    };
     const setLabelledMoneyOutput = (element, label, value, useSignClass = false) => {
       if (!element) {
         return;
@@ -1627,6 +2359,146 @@
       incomeFields.historyTableWrap.hidden = false;
       setTextContent(incomeFields.historyEmpty, `Comparing ${historyRows.length} year datasets.`);
     };
+    const applyImportedStatementRows = () => {
+      if (!importedStatementRows.length) {
+        setStatementImportStatus("Import a statement file first.", "error");
+        return;
+      }
+      const rowMap = new Map(monthRows.map((rowData) => [rowData.label, rowData]));
+      let appliedCount = 0;
+      let firstUpdatedInput = null;
+      importedStatementRows.forEach((row) => {
+        const targetRow = rowMap.get(row.label);
+        if (!targetRow) {
+          return;
+        }
+        monthValueKeys.forEach((key) => {
+          const rawValue = row[key];
+          const safeValue = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+          setRowFieldValue(targetRow, key, toEditableNumberString(safeValue));
+        });
+        if (!firstUpdatedInput) {
+          firstUpdatedInput = targetRow.incomeInput || null;
+        }
+        appliedCount += 1;
+      });
+      const shouldSyncAnnual = Boolean(incomeFields.statementImportSyncAnnual?.checked);
+      if (appliedCount > 0 && shouldSyncAnnual) {
+        syncAnnualCategoriesFromMonthlyRows();
+      }
+      formatAllIncomeCurrencyInputs();
+      calculateInvestmentIncome();
+      if (firstUpdatedInput) {
+        triggerImportAutosave(firstUpdatedInput);
+      }
+      if (appliedCount > 0) {
+        setStatementImportStatus(
+          shouldSyncAnnual ? `Applied ${appliedCount} month${appliedCount === 1 ? "" : "s"} and synced annual category totals.` : `Applied ${appliedCount} month${appliedCount === 1 ? "" : "s"} to the monthly table.`,
+          "success"
+        );
+      } else {
+        setStatementImportStatus("No matching months were found in the current dataset.", "error");
+      }
+    };
+    const triggerImportAutosave = (input) => {
+      if (!input) {
+        return;
+      }
+      input.dispatchEvent(new window.Event("input", { bubbles: true }));
+      input.dispatchEvent(new window.Event("change", { bubbles: true }));
+    };
+    const wireStatementImportWizard = () => {
+      if (!incomeFields.statementImportFile) {
+        return;
+      }
+      setStatementImportFileName("");
+      setStatementImportWarnings([]);
+      setStatementImportRows([]);
+      setStatementImportStatus("");
+      incomeFields.statementImportFile.addEventListener("change", async () => {
+        const [file] = Array.from(incomeFields.statementImportFile.files || []);
+        if (!file) {
+          setStatementImportFileName("");
+          setStatementImportWarnings([]);
+          setStatementImportRows([]);
+          setStatementImportStatus("");
+          return;
+        }
+        const importKind = getStatementImportKind(file);
+        if (!importKind) {
+          setStatementImportFileName(file.name || "");
+          setStatementImportWarnings([]);
+          setStatementImportRows([]);
+          setStatementImportStatus("Unsupported file type. Please import a CSV or PDF statement.", "error");
+          return;
+        }
+        setStatementImportFileName(file.name || "");
+        setStatementImportWarnings([]);
+        setStatementImportRows([]);
+        setStatementImportStatus("Parsing statement file...");
+        try {
+          const parseForCurrentDataset = async () => {
+            const targetMonthLabels = monthRows.map((rowData) => rowData.label);
+            return importKind === "pdf" ? parseStatementPdfFile(file, targetMonthLabels) : parseStatementCsv(await file.text(), targetMonthLabels);
+          };
+          let parsed = await parseForCurrentDataset();
+          let rows = Array.isArray(parsed?.rows) ? parsed.rows : [];
+          let warnings = Array.isArray(parsed?.warnings) ? parsed.warnings : [];
+          const detectedMonths = Array.isArray(parsed?.detectedMonths) ? parsed.detectedMonths : [];
+          if (!rows.length && incomeFields.datasetSelector) {
+            const inferredDatasetId = inferDatasetIdFromDetectedMonths(detectedMonths);
+            if (inferredDatasetId && inferredDatasetId !== incomeFields.datasetSelector.value) {
+              incomeFields.datasetSelector.value = inferredDatasetId;
+              incomeFields.datasetSelector.dispatchEvent(new window.Event("change", { bubbles: true }));
+              await new Promise((resolve) => {
+                window.setTimeout(resolve, 0);
+              });
+              updateStatementLabelsForCurrentDataset();
+              parsed = await parseForCurrentDataset();
+              rows = Array.isArray(parsed?.rows) ? parsed.rows : [];
+              warnings = Array.isArray(parsed?.warnings) ? parsed.warnings : [];
+              if (rows.length) {
+                warnings = [
+                  ...warnings,
+                  `Detected statement dates for ${getDatasetLabel(inferredDatasetId)} and switched dataset automatically.`
+                ];
+              }
+            }
+          }
+          setStatementImportWarnings(warnings);
+          setStatementImportRows(rows);
+          if (!rows.length) {
+            setStatementImportStatus("No matching monthly rows found in this file.", "error");
+            return;
+          }
+          setStatementImportStatus(
+            `Parsed ${rows.length} month${rows.length === 1 ? "" : "s"}. Review and apply to table.`,
+            "success"
+          );
+        } catch {
+          setStatementImportWarnings([]);
+          setStatementImportRows([]);
+          setStatementImportStatus(
+            "Could not parse this file. Try a cleaner CSV export or check the PDF text quality.",
+            "error"
+          );
+        }
+      });
+      if (incomeFields.statementImportApplyButton) {
+        incomeFields.statementImportApplyButton.addEventListener("click", () => {
+          applyImportedStatementRows();
+        });
+      }
+      if (incomeFields.statementImportOpenButton) {
+        incomeFields.statementImportOpenButton.addEventListener("click", () => {
+          setDataHubOpen(true);
+          if (incomeFields.statementImportWizard) {
+            incomeFields.statementImportWizard.open = true;
+          }
+          incomeFields.statementImportFile.click();
+        });
+      }
+    };
     const createMonthInput = ({ index, field, value, monthLabel, fieldLabel, mobile = false }) => {
       const input = document.createElement("input");
       input.type = "text";
@@ -1685,6 +2557,7 @@
       row.appendChild(marginCell);
       return {
         row,
+        monthCell,
         incomeInput: inputs.income,
         expensesInput: inputs.expenses,
         feesInput: inputs.fees,
@@ -1758,6 +2631,7 @@
       });
       return {
         card,
+        title,
         incomeInput: inputs.income,
         expensesInput: inputs.expenses,
         feesInput: inputs.fees,
@@ -1770,8 +2644,13 @@
       monthRows = [];
       clearNodeChildren(statementRowsBody);
       clearNodeChildren(statementCardsContainer);
+      const datasetLabels = getCurrentDatasetMonthLabels();
       DEFAULT_STATEMENT_MONTHS.forEach((month, index) => {
-        const desktopRow = createStatementDesktopRow(month, index);
+        const monthWithLabel = {
+          ...month,
+          label: datasetLabels[index] || month.label
+        };
+        const desktopRow = createStatementDesktopRow(monthWithLabel, index);
         statementRowsBody.appendChild(desktopRow.row);
         let cardIncomeInput = null;
         let cardExpensesInput = null;
@@ -1779,8 +2658,9 @@
         let cardDisbursementInput = null;
         let cardNetOutput = null;
         let cardMarginOutput = null;
+        let cardTitle = null;
         if (statementCardsContainer) {
-          const mobileCard = createStatementMobileCard(month, index);
+          const mobileCard = createStatementMobileCard(monthWithLabel, index);
           statementCardsContainer.appendChild(mobileCard.card);
           cardIncomeInput = mobileCard.incomeInput;
           cardExpensesInput = mobileCard.expensesInput;
@@ -1788,15 +2668,18 @@
           cardDisbursementInput = mobileCard.disbursementInput;
           cardNetOutput = mobileCard.outputNet;
           cardMarginOutput = mobileCard.outputMargin;
+          cardTitle = mobileCard.title;
         }
         const rowData = {
-          label: month.label,
+          label: monthWithLabel.label,
+          monthCell: desktopRow.monthCell,
           incomeInput: desktopRow.incomeInput,
           expensesInput: desktopRow.expensesInput,
           feesInput: desktopRow.feesInput,
           disbursementInput: desktopRow.disbursementInput,
           outputNet: desktopRow.outputNet,
           outputMargin: desktopRow.outputMargin,
+          mobileTitle: cardTitle,
           incomeInputMobile: cardIncomeInput,
           expensesInputMobile: cardExpensesInput,
           feesInputMobile: cardFeesInput,
@@ -1995,7 +2878,36 @@
         });
       });
     };
+    const wireDataHubControls = () => {
+      const openButtons = [
+        incomeFields.dataHubOpenButton,
+        incomeFields.dataHubOpenHeadButton,
+        incomeFields.dataHubOpenNavButton
+      ].filter(Boolean);
+      openButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          setDataHubOpen(true);
+        });
+      });
+      if (incomeFields.dataHubCloseButton) {
+        incomeFields.dataHubCloseButton.addEventListener("click", () => {
+          setDataHubOpen(false);
+        });
+      }
+      if (incomeFields.dataHubBackdrop) {
+        incomeFields.dataHubBackdrop.addEventListener("click", () => {
+          setDataHubOpen(false);
+        });
+      }
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && isDataHubOpen) {
+          setDataHubOpen(false);
+        }
+      });
+    };
     buildStatementRows();
+    updateStatementLabelsForCurrentDataset();
+    setDataHubOpen(false);
     if (incomeCardsExpandButton) {
       incomeCardsExpandButton.addEventListener("click", () => {
         setDetailsOpenState(statementCardsContainer, ".statement-card-details", true);
@@ -2048,13 +2960,163 @@
       if (detail.toolId !== "performance") {
         return;
       }
+      if (detail.action === "dataset-change" || detail.action === "load" || detail.action === "reset") {
+        updateStatementLabelsForCurrentDataset();
+      }
       renderMultiYearTrend();
     });
     applyCategoryDefaults();
+    wireDataHubControls();
+    wireStatementImportWizard();
     wireIncomeCurrencyFormatting();
     formatAllIncomeCurrencyInputs();
     wireIncomeEvents();
     calculateInvestmentIncome();
+  };
+
+  // js/tools/performanceSimple.js
+  var evaluateSimpleHealth = ({ netMargin, costRatio, netShare }) => {
+    if (netShare <= 0 || netMargin < 20 || costRatio > 80) {
+      return {
+        status: "Needs Attention",
+        tone: "watch",
+        note: "Low profitability or high annual costs. Review rent and operating cost assumptions."
+      };
+    }
+    if (netMargin >= 50 && costRatio <= 50) {
+      return {
+        status: "Healthy",
+        tone: "strong",
+        note: "Strong annual operating profile with healthy margin and controlled costs."
+      };
+    }
+    return {
+      status: "Stable",
+      tone: "stable",
+      note: "Annual snapshot is broadly stable. Monitor margin and cost ratio over time."
+    };
+  };
+  var applyHealthTone = (element, tone) => {
+    if (!element) {
+      return;
+    }
+    element.classList.remove("is-strong", "is-stable", "is-watch");
+    if (tone === "strong") {
+      element.classList.add("is-strong");
+    } else if (tone === "stable") {
+      element.classList.add("is-stable");
+    } else if (tone === "watch") {
+      element.classList.add("is-watch");
+    }
+  };
+  var initSimplePerformanceCalculator = () => {
+    const form = byId("simple-performance-calculator");
+    if (!form) {
+      return;
+    }
+    const fields = {
+      propertyValue: byId("simplePerfPropertyValue"),
+      ownershipPercent: byId("simplePerfOwnershipPercent"),
+      annualIncome: byId("simplePerfAnnualIncome"),
+      annualExpenses: byId("simplePerfAnnualExpenses"),
+      annualFees: byId("simplePerfAnnualFees"),
+      outputNetShare: byId("simplePerfNetShare"),
+      outputAnnualNet: byId("simplePerfAnnualNet"),
+      outputGrossYield: byId("simplePerfGrossYield"),
+      outputNetYield: byId("simplePerfNetYield"),
+      outputNetMargin: byId("simplePerfNetMargin"),
+      outputCostRatio: byId("simplePerfCostRatio"),
+      outputMonthlyShare: byId("simplePerfMonthlyShare"),
+      outputHealthStatus: byId("simplePerfHealthStatus"),
+      outputHealthNote: byId("simplePerfHealthNote"),
+      outputMobileNet: byId("mobileSimplePerfNet")
+    };
+    const calculateSimplePerformance = () => {
+      const propertyValue = readNumber(fields.propertyValue);
+      const ownershipPercent = Math.min(100, readNumber(fields.ownershipPercent));
+      const annualIncome = readNumber(fields.annualIncome);
+      const annualExpenses = readNumber(fields.annualExpenses);
+      const annualFees = readNumber(fields.annualFees);
+      const annualCosts = annualExpenses + annualFees;
+      const annualNet = annualIncome - annualCosts;
+      const ownershipRatio = ownershipPercent / 100;
+      const netShare = annualNet * ownershipRatio;
+      const monthlyShare = netShare / 12;
+      const grossYield = propertyValue > 0 ? annualIncome / propertyValue * 100 : 0;
+      const netYield = propertyValue > 0 ? annualNet / propertyValue * 100 : 0;
+      const netMargin = annualIncome > 0 ? annualNet / annualIncome * 100 : 0;
+      const costRatio = annualIncome > 0 ? annualCosts / annualIncome * 100 : 0;
+      const health = evaluateSimpleHealth({ netMargin, costRatio, netShare });
+      setOutputValue(fields.outputNetShare, netShare, true);
+      setOutputValue(fields.outputAnnualNet, annualNet, true);
+      setOutputValue(fields.outputMonthlyShare, monthlyShare, true);
+      setOutputValue(fields.outputMobileNet, netShare, true);
+      setPercentOutputValue(fields.outputGrossYield, grossYield);
+      setPercentOutputValue(fields.outputNetYield, netYield, true);
+      setPercentOutputValue(fields.outputNetMargin, netMargin, true);
+      setPercentOutputValue(fields.outputCostRatio, costRatio);
+      if (fields.outputHealthStatus) {
+        setTextContent(fields.outputHealthStatus, health.status);
+        applyHealthTone(fields.outputHealthStatus, health.tone);
+      }
+      if (fields.outputHealthNote) {
+        setTextContent(fields.outputHealthNote, health.note);
+        setSignedClass(fields.outputHealthNote, netShare);
+      }
+    };
+    const wireCurrencyFormatting = () => {
+      const currencyInputs = Array.from(form.querySelectorAll("input[data-currency='true']"));
+      currencyInputs.forEach((input) => {
+        input.addEventListener("focus", () => {
+          unformatCurrencyInput(input);
+        });
+        input.addEventListener("blur", () => {
+          formatCurrencyInput(input);
+          calculateSimplePerformance();
+        });
+      });
+    };
+    const wireEvents = () => {
+      const controls = Array.from(form.querySelectorAll("input, select"));
+      controls.forEach((control) => {
+        control.addEventListener("input", () => {
+          if (control.dataset && control.dataset.currency === "true") {
+            sanitizeCurrencyInput(control);
+          }
+          if (control.id === "simplePerfOwnershipPercent") {
+            clampPercentInput(control);
+          }
+          calculateSimplePerformance();
+        });
+        control.addEventListener("change", () => {
+          if (control.id === "simplePerfOwnershipPercent") {
+            clampPercentInput(control);
+          }
+          calculateSimplePerformance();
+        });
+      });
+    };
+    const applyDefaults = () => {
+      if (fields.propertyValue && !fields.propertyValue.value) {
+        fields.propertyValue.value = toEditableNumberString(11e5);
+      }
+      if (fields.annualIncome && !fields.annualIncome.value) {
+        fields.annualIncome.value = toEditableNumberString(267305.94);
+      }
+      if (fields.annualExpenses && !fields.annualExpenses.value) {
+        fields.annualExpenses.value = toEditableNumberString(47532.22);
+      }
+      if (fields.annualFees && !fields.annualFees.value) {
+        fields.annualFees.value = toEditableNumberString(13484.94);
+      }
+    };
+    applyDefaults();
+    wireCurrencyFormatting();
+    wireEvents();
+    Array.from(form.querySelectorAll("input[data-currency='true']")).forEach((input) => {
+      formatCurrencyInput(input);
+    });
+    calculateSimplePerformance();
   };
 
   // js/ui/mobileSummary.js
@@ -2433,6 +3495,7 @@
   var CONTROL_SELECTOR = "input, select, textarea";
   var SCHEMA_VERSION = 2;
   var LAST_DATASET_PREFIX = "pit:last-dataset:";
+  var isScenarioUiControl = (control) => Boolean(control?.closest?.("[data-scenario-controls]"));
   var controlKeyFor = (control) => {
     if (!control) {
       return "";
@@ -2467,6 +3530,9 @@
     const values = {};
     const controls = Array.from(form.querySelectorAll(CONTROL_SELECTOR));
     controls.forEach((control) => {
+      if (isScenarioUiControl(control)) {
+        return;
+      }
       const key = controlKeyFor(control);
       if (!key || key in values) {
         return;
@@ -2479,6 +3545,9 @@
     const groups = /* @__PURE__ */ new Map();
     const controls = Array.from(form.querySelectorAll(CONTROL_SELECTOR));
     controls.forEach((control) => {
+      if (isScenarioUiControl(control)) {
+        return;
+      }
       const key = controlKeyFor(control);
       if (!key) {
         return;
@@ -2575,6 +3644,7 @@
     const exportButton = container.querySelector("[data-scenario-action='export']");
     const importButton = container.querySelector("[data-scenario-action='import']");
     const importFileInput = container.querySelector("[data-scenario-action='import-file']");
+    const scenarioMenu = container.querySelector("[data-scenario-menu]");
     const defaultValues = collectFormSnapshot(form);
     let statusTimerId = null;
     let isApplyingSnapshot = false;
@@ -2772,30 +3842,40 @@
       hasUnsavedChanges = true;
       scheduleAutosave();
     };
+    const closeScenarioMenu = () => {
+      if (scenarioMenu && scenarioMenu.open) {
+        scenarioMenu.open = false;
+      }
+    };
     form.addEventListener("input", onAutosaveEvent);
     form.addEventListener("change", onAutosaveEvent);
     if (saveButton) {
       saveButton.addEventListener("click", () => {
         saveToStorage(true, activeDatasetId);
+        closeScenarioMenu();
       });
     }
     if (loadButton) {
       loadButton.addEventListener("click", () => {
         loadFromStorage(true, activeDatasetId);
+        closeScenarioMenu();
       });
     }
     if (resetButton) {
       resetButton.addEventListener("click", () => {
         resetToDefaults();
+        closeScenarioMenu();
       });
     }
     if (exportButton) {
       exportButton.addEventListener("click", () => {
         exportSnapshot();
+        closeScenarioMenu();
       });
     }
     if (importButton && importFileInput) {
       importButton.addEventListener("click", () => {
+        closeScenarioMenu();
         importFileInput.click();
       });
     }
@@ -2932,10 +4012,58 @@
   var initToolMenu = () => {
     const tabs = Array.from(document.querySelectorAll("[data-tool-tab]"));
     const panels = Array.from(document.querySelectorAll("[data-tool-panel]"));
+    const mobileSelect = document.getElementById("toolMenuSelect");
     if (!tabs.length || !panels.length) {
       return;
     }
-    const activatePanel = (panelId) => {
+    const panelIdToHash = {
+      "tool-net-proceeds": "net-proceeds",
+      "tool-simple-performance": "simple-performance",
+      "tool-investment-income": "advanced-performance",
+      "tool-simple-fund": "simple-fund"
+    };
+    const hashToPanelId = {
+      "net-proceeds": "tool-net-proceeds",
+      "simple-performance": "tool-simple-performance",
+      "advanced-performance": "tool-investment-income",
+      "simple-fund": "tool-simple-fund"
+    };
+    const getEnabledTabs = () => tabs.filter((tab) => !tab.disabled);
+    const resolvePanelIdFromHash = () => {
+      const rawHash = String(window.location.hash || "").replace(/^#/, "").trim().toLowerCase();
+      if (!rawHash) {
+        return "";
+      }
+      if (panels.some((panel) => panel.id === rawHash)) {
+        return rawHash;
+      }
+      return hashToPanelId[rawHash] || "";
+    };
+    const syncMobileSelect = (panelId) => {
+      if (!mobileSelect) {
+        return;
+      }
+      const option = Array.from(mobileSelect.options).find((item) => item.value === panelId && !item.disabled);
+      if (!option) {
+        return;
+      }
+      mobileSelect.value = panelId;
+    };
+    const syncHash = (panelId) => {
+      const nextHash = panelIdToHash[panelId] || panelId;
+      if (!nextHash) {
+        return;
+      }
+      if (window.location.hash === `#${nextHash}`) {
+        return;
+      }
+      window.history.replaceState(null, "", `#${nextHash}`);
+    };
+    const activatePanel = (panelId, { updateHash = true, focusTab = false } = {}) => {
+      const targetTab = tabs.find((tab) => tab.dataset.toolTab === panelId);
+      if (!targetTab || targetTab.disabled) {
+        return false;
+      }
       tabs.forEach((tab) => {
         const isActive = tab.dataset.toolTab === panelId;
         tab.classList.toggle("is-active", isActive);
@@ -2947,45 +4075,82 @@
         panel.classList.toggle("is-active", isActive);
         panel.hidden = !isActive;
       });
+      syncMobileSelect(panelId);
+      if (updateHash) {
+        syncHash(panelId);
+      }
+      if (focusTab) {
+        targetTab.focus();
+      }
+      return true;
     };
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
+        if (tab.disabled) {
+          return;
+        }
         const targetPanel = tab.dataset.toolTab;
         if (!targetPanel) {
           return;
         }
-        activatePanel(targetPanel);
+        activatePanel(targetPanel, { updateHash: true, focusTab: false });
       });
       tab.addEventListener("keydown", (event) => {
-        const currentIndex = tabs.indexOf(tab);
+        const enabledTabs2 = getEnabledTabs();
+        const currentIndex = enabledTabs2.indexOf(tab);
         if (currentIndex === -1) {
           return;
         }
         let nextIndex = currentIndex;
         if (event.key === "ArrowRight") {
-          nextIndex = (currentIndex + 1) % tabs.length;
+          nextIndex = (currentIndex + 1) % enabledTabs2.length;
         } else if (event.key === "ArrowLeft") {
-          nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+          nextIndex = (currentIndex - 1 + enabledTabs2.length) % enabledTabs2.length;
         } else if (event.key === "Home") {
           nextIndex = 0;
         } else if (event.key === "End") {
-          nextIndex = tabs.length - 1;
+          nextIndex = enabledTabs2.length - 1;
         } else {
           return;
         }
         event.preventDefault();
-        const nextTab = tabs[nextIndex];
+        const nextTab = enabledTabs2[nextIndex];
         const targetPanel = nextTab.dataset.toolTab;
         if (!targetPanel) {
           return;
         }
-        activatePanel(targetPanel);
+        activatePanel(targetPanel, { updateHash: true, focusTab: true });
         nextTab.focus();
       });
     });
-    const defaultTab = tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0];
+    if (mobileSelect) {
+      mobileSelect.addEventListener("change", () => {
+        const targetPanel = mobileSelect.value;
+        if (!targetPanel) {
+          return;
+        }
+        const option = Array.from(mobileSelect.options).find((item) => item.value === targetPanel);
+        if (!option || option.disabled) {
+          return;
+        }
+        activatePanel(targetPanel, { updateHash: true, focusTab: false });
+      });
+    }
+    window.addEventListener("hashchange", () => {
+      const hashPanelId2 = resolvePanelIdFromHash();
+      if (!hashPanelId2) {
+        return;
+      }
+      activatePanel(hashPanelId2, { updateHash: false, focusTab: false });
+    });
+    const enabledTabs = getEnabledTabs();
+    const defaultTab = enabledTabs.find((tab) => tab.classList.contains("is-active")) || enabledTabs[0] || tabs[0];
+    const hashPanelId = resolvePanelIdFromHash();
+    if (hashPanelId && activatePanel(hashPanelId, { updateHash: false, focusTab: false })) {
+      return;
+    }
     if (defaultTab && defaultTab.dataset.toolTab) {
-      activatePanel(defaultTab.dataset.toolTab);
+      activatePanel(defaultTab.dataset.toolTab, { updateHash: true, focusTab: false });
     }
   };
 
@@ -2996,6 +4161,7 @@
     wireMobileSummaryJumpButtons();
     initPortfolioSummary();
     initNetProceedsCalculator();
+    initSimplePerformanceCalculator();
     initPerformanceCalculator();
     initSimpleFundCalculator();
     initScenarioStorage();
