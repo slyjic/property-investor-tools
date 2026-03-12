@@ -62,9 +62,9 @@ const scenarios = [
     setup: async () => {},
   },
   {
-    name: "Performance",
+    name: "Simple Performance",
     setup: async (page) => {
-      await page.click("#tab-investment-income");
+      await page.click("#tab-simple-performance");
     },
   },
   {
@@ -88,90 +88,100 @@ const summarizeViolation = (violation) => ({
 });
 
 const run = async () => {
-  await new Promise((resolve) => {
-    server.listen(port, host, resolve);
-  });
+  let browser = null;
+  let context = null;
 
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  const url = `http://${host}:${port}/index.html`;
-
-  const results = [];
-
-  for (const scenario of scenarios) {
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("#tab-net-proceeds");
-    await scenario.setup(page);
-
-    const axeResult = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "best-practice"])
-      .analyze();
-
-    results.push({
-      scenario: scenario.name,
-      url,
-      violations: axeResult.violations.map(summarizeViolation),
+  try {
+    await new Promise((resolve) => {
+      server.listen(port, host, resolve);
     });
-  }
 
-  await context.close();
-  await browser.close();
-  await new Promise((resolve) => {
-    server.close(resolve);
-  });
+    browser = await chromium.launch({ headless: true });
+    context = await browser.newContext();
+    const page = await context.newPage();
+    const url = `http://${host}:${port}/index.html`;
 
-  const allViolations = results.flatMap((result) =>
-    result.violations.map((violation) => ({ scenario: result.scenario, ...violation })),
-  );
+    const results = [];
 
-  const criticalViolations = allViolations.filter((violation) => violation.impact === "critical");
+    for (const scenario of scenarios) {
+      await page.goto(url, { waitUntil: "commit" });
+      await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
+      await scenario.setup(page);
 
-  const report = {
-    generatedAt: new Date().toISOString(),
-    scenarios: results,
-    totals: {
-      scenarios: results.length,
-      violations: allViolations.length,
-      critical: criticalViolations.length,
-    },
-  };
+      const axeResult = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "best-practice"])
+        .analyze();
 
-  const reportPath = path.resolve(root, "reports/a11y-report.json");
-  const summaryPath = path.resolve(root, "reports/a11y-summary.txt");
-  const reportsDir = path.dirname(reportPath);
-  const jsonText = JSON.stringify(report, null, 2);
-
-  const lines = [
-    `A11y audit generated: ${report.generatedAt}`,
-    `Scenarios: ${report.totals.scenarios}`,
-    `Violations: ${report.totals.violations}`,
-    `Critical: ${report.totals.critical}`,
-  ];
-
-  for (const result of results) {
-    lines.push(`\n[${result.scenario}] ${result.violations.length} violation(s)`);
-    for (const violation of result.violations) {
-      lines.push(
-        `- (${violation.impact}) ${violation.id}: ${violation.help} [nodes: ${violation.nodeCount}]`,
-      );
+      results.push({
+        scenario: scenario.name,
+        url,
+        violations: axeResult.violations.map(summarizeViolation),
+      });
     }
-  }
 
-  await mkdir(reportsDir, { recursive: true });
-  await Promise.all([writeFile(reportPath, jsonText), writeFile(summaryPath, `${lines.join("\n")}\n`)]);
+    const allViolations = results.flatMap((result) =>
+      result.violations.map((violation) => ({ scenario: result.scenario, ...violation })),
+    );
 
-  console.log(lines.join("\n"));
+    const criticalViolations = allViolations.filter((violation) => violation.impact === "critical");
 
-  if (criticalViolations.length > 0) {
-    process.exitCode = 1;
+    const report = {
+      generatedAt: new Date().toISOString(),
+      scenarios: results,
+      totals: {
+        scenarios: results.length,
+        violations: allViolations.length,
+        critical: criticalViolations.length,
+      },
+    };
+
+    const reportPath = path.resolve(root, "reports/a11y-report.json");
+    const summaryPath = path.resolve(root, "reports/a11y-summary.txt");
+    const reportsDir = path.dirname(reportPath);
+    const jsonText = JSON.stringify(report, null, 2);
+
+    const lines = [
+      `A11y audit generated: ${report.generatedAt}`,
+      `Scenarios: ${report.totals.scenarios}`,
+      `Violations: ${report.totals.violations}`,
+      `Critical: ${report.totals.critical}`,
+    ];
+
+    for (const result of results) {
+      lines.push(`\n[${result.scenario}] ${result.violations.length} violation(s)`);
+      for (const violation of result.violations) {
+        lines.push(
+          `- (${violation.impact}) ${violation.id}: ${violation.help} [nodes: ${violation.nodeCount}]`,
+        );
+      }
+    }
+
+    await mkdir(reportsDir, { recursive: true });
+    await Promise.all([writeFile(reportPath, jsonText), writeFile(summaryPath, `${lines.join("\n")}\n`)]);
+
+    console.log(lines.join("\n"));
+
+    if (criticalViolations.length > 0) {
+      process.exitCode = 1;
+    }
+  } finally {
+    if (context) {
+      await context.close().catch(() => {});
+    }
+
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
+
+    await new Promise((resolve) => {
+      server.close(() => {
+        resolve();
+      });
+    }).catch(() => {});
   }
 };
 
-run().catch(async (error) => {
+run().catch((error) => {
   console.error(error);
-  await new Promise((resolve) => {
-    server.close(resolve);
-  }).catch(() => {});
   process.exitCode = 1;
 });
