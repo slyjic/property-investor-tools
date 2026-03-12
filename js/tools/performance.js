@@ -113,6 +113,9 @@ export const initPerformanceCalculator = () => {
     historyTableWrap: byId("incomeHistoryTableWrap"),
     historyRowsBody: byId("incomeHistoryRows"),
     historyEmpty: byId("incomeHistoryEmpty"),
+    outputHistorySparkline: byId("incomeHistorySparkline"),
+    outputHistoryTrendLatest: byId("incomeHistoryTrendLatest"),
+    trendHistoryCard: byId("incomeHistoryTrendCard"),
   };
 
   const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
@@ -315,6 +318,13 @@ export const initPerformanceCalculator = () => {
 
     if (historyRows.length < 2) {
       incomeFields.historyTableWrap.hidden = true;
+      if (incomeFields.trendHistoryCard) {
+        incomeFields.trendHistoryCard.hidden = true;
+      }
+      if (incomeFields.outputHistoryTrendLatest) {
+        setOutputValue(incomeFields.outputHistoryTrendLatest, 0);
+      }
+      renderSparkline(incomeFields.outputHistorySparkline, []);
       setTextContent(
         incomeFields.historyEmpty,
         "Save at least two year datasets to compare long-term net, margin, and yield.",
@@ -347,6 +357,21 @@ export const initPerformanceCalculator = () => {
       incomeFields.historyRowsBody.appendChild(tableRow);
     });
 
+    const netSeries = historyRows.map((row) => row.netOperatingCashflowShare);
+    const latestNet = netSeries.length ? netSeries[netSeries.length - 1] : 0;
+
+    setOutputValue(incomeFields.outputHistoryTrendLatest, latestNet, true);
+    renderSparkline(incomeFields.outputHistorySparkline, netSeries, {
+      baseline: 0,
+      lineColor: "#69d49f",
+      areaColor: "rgba(105, 212, 159, 0.2)",
+      baselineColor: "rgba(188, 218, 223, 0.28)",
+    });
+    setTrendToneClass(incomeFields.trendHistoryCard, latestNet);
+
+    if (incomeFields.trendHistoryCard) {
+      incomeFields.trendHistoryCard.hidden = false;
+    }
     incomeFields.historyTableWrap.hidden = false;
     setTextContent(incomeFields.historyEmpty, `Comparing ${historyRows.length} year datasets.`);
   };

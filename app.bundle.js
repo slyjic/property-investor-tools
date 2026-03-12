@@ -1405,7 +1405,10 @@
       datasetSelector: byId("incomeDatasetYear"),
       historyTableWrap: byId("incomeHistoryTableWrap"),
       historyRowsBody: byId("incomeHistoryRows"),
-      historyEmpty: byId("incomeHistoryEmpty")
+      historyEmpty: byId("incomeHistoryEmpty"),
+      outputHistorySparkline: byId("incomeHistorySparkline"),
+      outputHistoryTrendLatest: byId("incomeHistoryTrendLatest"),
+      trendHistoryCard: byId("incomeHistoryTrendCard")
     };
     const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
     let monthRows = [];
@@ -1576,6 +1579,13 @@
       clearNodeChildren(incomeFields.historyRowsBody);
       if (historyRows.length < 2) {
         incomeFields.historyTableWrap.hidden = true;
+        if (incomeFields.trendHistoryCard) {
+          incomeFields.trendHistoryCard.hidden = true;
+        }
+        if (incomeFields.outputHistoryTrendLatest) {
+          setOutputValue(incomeFields.outputHistoryTrendLatest, 0);
+        }
+        renderSparkline(incomeFields.outputHistorySparkline, []);
         setTextContent(
           incomeFields.historyEmpty,
           "Save at least two year datasets to compare long-term net, margin, and yield."
@@ -1601,6 +1611,19 @@
         tableRow.appendChild(yieldCell);
         incomeFields.historyRowsBody.appendChild(tableRow);
       });
+      const netSeries = historyRows.map((row) => row.netOperatingCashflowShare);
+      const latestNet = netSeries.length ? netSeries[netSeries.length - 1] : 0;
+      setOutputValue(incomeFields.outputHistoryTrendLatest, latestNet, true);
+      renderSparkline(incomeFields.outputHistorySparkline, netSeries, {
+        baseline: 0,
+        lineColor: "#69d49f",
+        areaColor: "rgba(105, 212, 159, 0.2)",
+        baselineColor: "rgba(188, 218, 223, 0.28)"
+      });
+      setTrendToneClass(incomeFields.trendHistoryCard, latestNet);
+      if (incomeFields.trendHistoryCard) {
+        incomeFields.trendHistoryCard.hidden = false;
+      }
       incomeFields.historyTableWrap.hidden = false;
       setTextContent(incomeFields.historyEmpty, `Comparing ${historyRows.length} year datasets.`);
     };
@@ -2409,6 +2432,7 @@
   // js/ui/scenarioStorage.js
   var CONTROL_SELECTOR = "input, select, textarea";
   var SCHEMA_VERSION = 2;
+  var LAST_DATASET_PREFIX = "pit:last-dataset:";
   var controlKeyFor = (control) => {
     if (!control) {
       return "";
@@ -2544,6 +2568,7 @@
       return;
     }
     const statusElement = container.querySelector("[data-scenario-status]");
+    const badgeElement = container.querySelector("[data-scenario-badge]");
     const saveButton = container.querySelector("[data-scenario-action='save']");
     const loadButton = container.querySelector("[data-scenario-action='load']");
     const resetButton = container.querySelector("[data-scenario-action='reset']");
@@ -2554,6 +2579,8 @@
     let statusTimerId = null;
     let isApplyingSnapshot = false;
     let activeDatasetId = datasetInput && datasetInput.value ? datasetInput.value : "";
+    let hasUnsavedChanges = false;
+    const lastDatasetStorageKey = `${LAST_DATASET_PREFIX}${toolId}`;
     const getDatasetLabel = (datasetId = "") => {
       if (!datasetInput) {
         return "";
@@ -2567,6 +2594,28 @@
         return "";
       }
       return ` (${label})`;
+    };
+    const hasDatasetOption = (datasetId = "") => {
+      if (!datasetInput || !datasetId) {
+        return false;
+      }
+      return Array.from(datasetInput.options).some((option) => option.value === datasetId);
+    };
+    const persistLastDataset = (datasetId = "") => {
+      if (!datasetId) {
+        return;
+      }
+      try {
+        window.localStorage.setItem(lastDatasetStorageKey, datasetId);
+      } catch {
+      }
+    };
+    const updateDatasetBadge = (datasetId = "") => {
+      if (!badgeElement) {
+        return;
+      }
+      const label = getDatasetLabel(datasetId);
+      badgeElement.textContent = label ? `Editing: ${label}` : "";
     };
     const emitScenarioUpdate = (action, datasetId = activeDatasetId) => {
       window.dispatchEvent(
@@ -2614,6 +2663,9 @@
           values: collectFormSnapshot(form)
         };
         window.localStorage.setItem(getStorageKey(datasetId), JSON.stringify(payload));
+        hasUnsavedChanges = false;
+        persistLastDataset(datasetId);
+        updateDatasetBadge(datasetId);
         emitScenarioUpdate("save", datasetId);
         if (showStatus) {
           setStatus(`Inputs saved in this browser${datasetSuffix(datasetId)}.`, "success");
@@ -2639,6 +2691,9 @@
         isApplyingSnapshot = true;
         applyFormSnapshot(form, parsed.values);
         isApplyingSnapshot = false;
+        hasUnsavedChanges = false;
+        persistLastDataset(datasetId);
+        updateDatasetBadge(datasetId);
         emitScenarioUpdate("load", datasetId);
         if (showStatus) {
           setStatus(`Saved inputs loaded${datasetSuffix(datasetId)}.`, "success");
@@ -2660,6 +2715,9 @@
         window.localStorage.removeItem(getStorageKey(activeDatasetId));
       } catch {
       }
+      hasUnsavedChanges = false;
+      persistLastDataset(activeDatasetId);
+      updateDatasetBadge(activeDatasetId);
       emitScenarioUpdate("reset", activeDatasetId);
       setStatus(`Inputs reset to defaults${datasetSuffix(activeDatasetId)}.`, "success");
     };
@@ -2692,6 +2750,7 @@
         isApplyingSnapshot = true;
         applyFormSnapshot(form, payload.values);
         isApplyingSnapshot = false;
+        hasUnsavedChanges = false;
         saveToStorage(false, activeDatasetId);
         emitScenarioUpdate("import", activeDatasetId);
         setStatus(`Scenario imported${datasetSuffix(activeDatasetId)}.`, "success");
@@ -2710,6 +2769,7 @@
       if (isApplyingSnapshot) {
         return;
       }
+      hasUnsavedChanges = true;
       scheduleAutosave();
     };
     form.addEventListener("input", onAutosaveEvent);
@@ -2747,22 +2807,40 @@
       });
     }
     if (datasetInput) {
+      try {
+        const restoredDatasetId = window.localStorage.getItem(lastDatasetStorageKey);
+        if (restoredDatasetId && hasDatasetOption(restoredDatasetId)) {
+          datasetInput.value = restoredDatasetId;
+          activeDatasetId = restoredDatasetId;
+        }
+      } catch {
+      }
+      updateDatasetBadge(activeDatasetId);
       datasetInput.addEventListener("change", () => {
         const previousDatasetId = activeDatasetId;
-        saveToStorage(false, previousDatasetId);
+        const hadUnsavedBeforeSwitch = hasUnsavedChanges;
+        if (hadUnsavedBeforeSwitch) {
+          saveToStorage(false, previousDatasetId);
+        }
         activeDatasetId = datasetInput.value;
+        persistLastDataset(activeDatasetId);
+        updateDatasetBadge(activeDatasetId);
         const loaded = loadFromStorage(false, activeDatasetId);
         if (!loaded) {
           isApplyingSnapshot = true;
           applyFormSnapshot(form, defaultValues);
           isApplyingSnapshot = false;
+          hasUnsavedChanges = false;
         }
+        const switchMessage = loaded ? `Switched to ${getDatasetLabel(activeDatasetId)}. Saved inputs loaded.` : `Switched to ${getDatasetLabel(activeDatasetId)}. Using default inputs.`;
         setStatus(
-          loaded ? `Switched to ${getDatasetLabel(activeDatasetId)}. Saved inputs loaded.` : `Switched to ${getDatasetLabel(activeDatasetId)}. Using default inputs.`,
+          hadUnsavedBeforeSwitch ? `Unsaved edits were auto-saved before switching. ${switchMessage}` : switchMessage,
           "success"
         );
         emitScenarioUpdate("dataset-change", activeDatasetId);
       });
+    } else {
+      updateDatasetBadge(activeDatasetId);
     }
     loadFromStorage(false, activeDatasetId);
   };

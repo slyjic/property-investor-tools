@@ -11,12 +11,14 @@ Includes a global portfolio summary PDF export from the page header.
   - Ownership share support
   - Tax year switching (2025-26, 2026-27, 2027-28)
   - Year datasets (FY 2024-25 to FY 2028-29) with scenario save/load/reset
+  - Current dataset badge and last-used dataset restore
   - JSON import/export for backups and sharing
   - PDF report export
 - Performance Calculator
   - Annual category totals and monthly cashflow tracking
   - Net annual/monthly outcomes, margin, and yield views
-  - Year dataset selector and compact multi-year trend summary (net, margin, yield)
+  - Year dataset selector with current-dataset badge and restore-last-year behavior
+  - Compact multi-year trend summary (net, margin, yield) with sparkline
   - Scenario actions: save/load/reset with per-year local storage
   - JSON import/export for backups and sharing
   - Quick monthly entry actions and quarterly rollups
