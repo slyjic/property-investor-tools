@@ -6,15 +6,26 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
 
 ## Current Snapshot
 
-- `index.html`: 1,273 lines
-- `styles.css`: 2,290 lines
-- `app.js`: 1,802 lines
-- Runtime checks: `node --check app.js` passes
-- Tooling/tests: no linting pipeline, no automated tests
+- `index.html`: 1,401 lines
+- `styles.css`: 2,325 lines
+- `app.js`: 17 lines (entrypoint only)
+- Modularized JS:
+  - `js/shared/runtime.js`: 292 lines
+  - `js/tools/netProceeds.js`: 236 lines
+  - `js/tools/performance.js`: 758 lines
+  - `js/tools/fund.js`: 292 lines
+- Quality checks:
+  - `npm run format:check` passes
+  - `npm run lint` passes
+  - `npm test` passes (22 tests)
+  - `npm run audit:a11y` passes (0 violations)
 
 ## Prioritized Tasks
 
 ### P1. Split `app.js` into focused modules
+
+Status: Done on 12 Mar 2026.
+
 - Why: one large file currently mixes calculators, DOM wiring, formatting, and PDF rendering.
 - Scope:
   - Extract shared utilities (`format`, number parsing, DOM helpers) into `js/shared/*`.
@@ -26,6 +37,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - Main entry file orchestrates module init only.
 
 ### P1. Add formula regression tests for existing calculators
+
+Status: Done on 12 Mar 2026 (20 deterministic regression tests).
+
 - Why: calculations are core business logic; currently untested.
 - Scope:
   - Add test runner (`vitest` or similar lightweight setup).
@@ -39,6 +53,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - CI/local command `npm test` runs clean.
 
 ### P1. Introduce lint/format scripts
+
+Status: Done on 12 Mar 2026.
+
 - Why: reduces regressions and keeps style consistent as files grow.
 - Scope:
   - Add `eslint` for JS and `prettier` for HTML/CSS/JS.
@@ -48,6 +65,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - No lint errors on main branch.
 
 ### P1. Move hardcoded business constants into a config layer
+
+Status: Done on 12 Mar 2026.
+
 - Why: tax brackets, RBA cash rate, and statement defaults are embedded directly in code.
 - Scope:
   - Create `js/config/rates.js` for tax brackets and fund assumptions.
@@ -58,6 +78,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - Updating rates requires editing config only.
 
 ### P1. Accessibility hardening for helper tooltips and dynamic outputs
+
+Status: Done on 12 Mar 2026 (semantic tooltip controls, scoped live regions, and automated axe pass with 0 violations across all three tools).
+
 - Why: current custom help tips rely on hover/focus and need stronger semantic support.
 - Scope:
   - Replace non-semantic tooltip triggers with accessible button + `aria-describedby`.
@@ -68,6 +91,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - No critical a11y issues in a Lighthouse/axe pass.
 
 ### P2. Refactor dynamic row rendering away from large `innerHTML` blocks
+
+Status: Done on 12 Mar 2026.
+
 - Why: large template strings are hard to maintain and review safely.
 - Scope:
   - Convert statement/fund row rendering to small DOM factory helpers.
@@ -77,6 +103,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - Rendering functions are smaller and easier to test.
 
 ### P2. Add light performance guardrails for high-frequency input updates
+
+Status: Done on 12 Mar 2026 (frame-coalesced input throttling in high-frequency paths plus changed-node output updates for text, tone classes, and sparklines).
+
 - Why: each input event triggers full recalculation and broad DOM writes.
 - Scope:
   - Batch visual updates with `requestAnimationFrame` or microtask queue.
@@ -86,6 +115,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - No calculation behavior changes.
 
 ### P2. CSS structure cleanup
+
+Status: Done on 12 Mar 2026.
+
 - Why: stylesheet is large and increasingly difficult to reason about.
 - Scope:
   - Group styles by component section with clear headers.
@@ -96,6 +128,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - Easier traceability from component to style section.
 
 ### P2. Add deterministic fixtures for PDF output smoke testing
+
+Status: Done on 12 Mar 2026.
+
 - Why: PDF is critical output and currently validated manually.
 - Scope:
   - Add one deterministic input fixture.
@@ -104,6 +139,9 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
   - PDF generation path is covered by automated check.
 
 ### P3. Documentation refresh
+
+Status: Done on 12 Mar 2026.
+
 - Why: README is outdated relative to current tool set and behavior.
 - Scope:
   - Update README with all three tools, assumptions, and known limitations.

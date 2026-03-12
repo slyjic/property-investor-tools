@@ -12,7 +12,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script defer src="app.js"></script>
+    <script defer src="app.bundle.js"></script>
   </head>
   <body>
     <main class="page-shell">
@@ -25,11 +25,12 @@
           </p>
         </header>
 
-        <nav class="tool-menu" aria-label="Calculator menu">
+        <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
           <button
             class="tool-tab is-active"
             id="tab-net-proceeds"
             type="button"
+            role="tab"
             data-tool-tab="tool-net-proceeds"
             aria-controls="tool-net-proceeds"
             aria-selected="true"
@@ -40,6 +41,7 @@
             class="tool-tab"
             id="tab-investment-income"
             type="button"
+            role="tab"
             data-tool-tab="tool-investment-income"
             aria-controls="tool-investment-income"
             aria-selected="false"
@@ -50,6 +52,7 @@
             class="tool-tab"
             id="tab-simple-fund"
             type="button"
+            role="tab"
             data-tool-tab="tool-simple-fund"
             aria-controls="tool-simple-fund"
             aria-selected="false"
@@ -58,7 +61,13 @@
           </button>
         </nav>
 
-        <section class="tool-panel is-active" id="tool-net-proceeds" data-tool-panel aria-labelledby="tab-net-proceeds">
+        <section
+          class="tool-panel is-active"
+          id="tool-net-proceeds"
+          data-tool-panel
+          role="tabpanel"
+          aria-labelledby="tab-net-proceeds"
+        >
           <div class="tool-panel-head">
             <h2>Net Proceeds Calculator</h2>
             <p class="tool-description">Model settlement proceeds using disposal costs, ownership apportionment, and CGT impact.</p>
@@ -93,9 +102,20 @@
                   <div class="field-item">
                     <label for="salePrice">
                       Sale price (whole asset)
-                      <span class="info-tip" tabindex="0" aria-label="Contracted sale value for the full asset before ownership split.">
-                        i
-                        <span class="info-tip-text">Contracted sale value for the full asset before ownership split.</span>
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-sale-price"
+                          aria-label="More information about sale price"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-sale-price" role="tooltip" aria-hidden="true"
+                          >Contracted sale value for the full asset before ownership split.</span
+                        >
                       </span>
                     </label>
                     <input
@@ -125,9 +145,20 @@
                   <div class="field-item">
                     <label for="ownershipPercent">
                       Ownership share (%)
-                      <span class="info-tip" tabindex="0" aria-label="Used to apportion sale proceeds, costs, and capital gain to your share.">
-                        i
-                        <span class="info-tip-text">Used to apportion sale proceeds, costs, and capital gain to your share.</span>
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-ownership-share"
+                          aria-label="More information about ownership share"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-ownership-share" role="tooltip" aria-hidden="true"
+                          >Used to apportion sale proceeds, costs, and capital gain to your share.</span
+                        >
                       </span>
                     </label>
                     <input
@@ -154,9 +185,21 @@
                   <div class="field-item net-field-item-full">
                     <label for="outstandingMortgage">
                       Loan payout at settlement (personal)
-                      <span class="info-tip" tabindex="0" aria-label="Your personal loan balance repaid at settlement. This is not scaled by ownership share.">
-                        i
-                        <span class="info-tip-text">Your personal loan balance repaid at settlement. This is not scaled by ownership share.</span>
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-loan-payout"
+                          aria-label="More information about loan payout"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-loan-payout" role="tooltip" aria-hidden="true"
+                          >Your personal loan balance repaid at settlement. This is not scaled by ownership
+                          share.</span
+                        >
                       </span>
                     </label>
                     <input
@@ -306,7 +349,7 @@
                     </div>
                   </div>
 
-                  <aside class="net-sell-summary" aria-live="polite">
+                  <section class="net-sell-summary" aria-label="Disposal cost snapshot">
                     <h4 class="net-subgroup-title">Disposal Cost Snapshot</h4>
                     <dl class="net-cost-list">
                       <div>
@@ -326,7 +369,7 @@
                         <dd id="totalSellingCostsInline">$0.00</dd>
                       </div>
                     </dl>
-                  </aside>
+                  </section>
                 </div>
               </section>
 
@@ -337,9 +380,20 @@
                   <div class="field-item">
                     <label for="taxableIncome">
                       Base taxable income (before this gain)
-                      <span class="info-tip" tabindex="0" aria-label="Your expected taxable income for the selected year before adding this capital gain.">
-                        i
-                        <span class="info-tip-text">Your expected taxable income for the selected year before adding this capital gain.</span>
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-taxable-income"
+                          aria-label="More information about base taxable income"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-taxable-income" role="tooltip" aria-hidden="true"
+                          >Your expected taxable income for the selected year before adding this capital gain.</span
+                        >
                       </span>
                     </label>
                     <input
@@ -367,12 +421,21 @@
               </section>
             </form>
 
-            <aside class="panel panel-results net-results-panel results-panel-standard" id="netResultsDock" aria-live="polite">
+            <section class="panel panel-results net-results-panel results-panel-standard" id="netResultsDock">
               <h3>4. Settlement Outcomes</h3>
 
               <section class="results-hero results-hero-net" aria-label="Primary settlement outcome">
                 <p class="results-hero-label">Net cash to you at settlement</p>
-                <p class="results-hero-value" id="netProceeds">$0.00</p>
+                <p
+                  class="results-hero-value"
+                  id="netProceeds"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  aria-label="Net cash to you at settlement"
+                >
+                  $0.00
+                </p>
                 <p class="results-hero-note">
                   After your share of selling costs, estimated CGT, and personal loan payout.
                 </p>
@@ -431,7 +494,7 @@
                 <button class="button-primary" id="downloadPdf" type="button">Download PDF Report</button>
                 <p class="pdf-status" id="pdfStatus" aria-live="polite"></p>
               </div>
-            </aside>
+            </section>
           </div>
         </section>
 
@@ -439,6 +502,7 @@
           class="tool-panel"
           id="tool-investment-income"
           data-tool-panel
+          role="tabpanel"
           hidden
           aria-labelledby="tab-investment-income"
         >
@@ -490,9 +554,20 @@
                   <div class="field-item">
                     <label for="incomeOwnershipPercent">
                       Ownership share (%)
-                      <span class="info-tip" tabindex="0" aria-label="Used to scale net results to your personal share of the asset.">
-                        i
-                        <span class="info-tip-text">Used to scale net results to your personal share of the asset.</span>
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-income-ownership-share"
+                          aria-label="More information about ownership share"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-income-ownership-share" role="tooltip" aria-hidden="true"
+                          >Used to scale net results to your personal share of the asset.</span
+                        >
                       </span>
                     </label>
                     <input
@@ -690,9 +765,21 @@
                     <div class="field-item">
                       <label for="incomeCapex">
                         Owner capex (non-operating)
-                        <span class="info-tip" tabindex="0" aria-label="Capital works entered for tracking. Treated as cost in this simplified performance view.">
-                          i
-                          <span class="info-tip-text">Capital works entered for tracking. Treated as cost in this simplified performance view.</span>
+                        <span class="info-tip-wrap">
+                          <button
+                            class="info-tip"
+                            type="button"
+                            data-tooltip-trigger
+                            aria-expanded="false"
+                            aria-controls="tip-income-capex"
+                            aria-label="More information about owner capex"
+                          >
+                            i
+                          </button>
+                          <span class="info-tip-text" id="tip-income-capex" role="tooltip" aria-hidden="true"
+                            >Capital works entered for tracking. Treated as cost in this simplified performance
+                            view.</span
+                          >
                         </span>
                       </label>
                       <input
@@ -816,7 +903,7 @@
                   </button>
                 </div>
 
-                <div class="statement-table-wrap">
+                <div class="statement-table-wrap" tabindex="0" aria-label="Monthly statement table (scroll horizontally)">
                   <table class="statement-table">
                     <thead>
                       <tr>
@@ -876,12 +963,21 @@
                 </div>
               </section>
             </form>
-            <aside class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock" aria-live="polite">
+            <section class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock">
               <h3>4. Performance Outcomes</h3>
 
               <section class="results-hero results-hero-performance" aria-label="Primary performance outcome">
                 <p class="results-hero-label">Net operating cashflow (your share)</p>
-                <p class="results-hero-value" id="incomeKpiNetShare">$0.00</p>
+                <p
+                  class="results-hero-value"
+                  id="incomeKpiNetShare"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  aria-label="Net operating cashflow your share"
+                >
+                  $0.00
+                </p>
                 <p class="results-hero-note">
                   Health:
                   <span class="inline-health-status" id="incomeHealthStatus">-</span>
@@ -954,9 +1050,20 @@
                 <div>
                   <dt>
                     Net yield
-                    <span class="info-tip" tabindex="0" aria-label="Net yield here is a simplified NOI proxy: net cashflow divided by asset value.">
-                      i
-                      <span class="info-tip-text">Net yield here is a simplified NOI proxy: net cashflow divided by asset value.</span>
+                    <span class="info-tip-wrap">
+                      <button
+                        class="info-tip"
+                        type="button"
+                        data-tooltip-trigger
+                        aria-expanded="false"
+                        aria-controls="tip-net-yield"
+                        aria-label="More information about net yield"
+                      >
+                        i
+                      </button>
+                      <span class="info-tip-text" id="tip-net-yield" role="tooltip" aria-hidden="true"
+                        >Net yield here is a simplified NOI proxy: net cashflow divided by asset value.</span
+                      >
                     </span>
                   </dt>
                   <dd id="incomeKpiNetYield">0.00%</dd>
@@ -968,9 +1075,20 @@
                 <div>
                   <dt>
                     Cost ratio
-                    <span class="info-tip" tabindex="0" aria-label="Expenses plus fees as a percentage of income. Lower is generally better.">
-                      i
-                      <span class="info-tip-text">Expenses plus fees as a percentage of income. Lower is generally better.</span>
+                    <span class="info-tip-wrap">
+                      <button
+                        class="info-tip"
+                        type="button"
+                        data-tooltip-trigger
+                        aria-expanded="false"
+                        aria-controls="tip-cost-ratio"
+                        aria-label="More information about cost ratio"
+                      >
+                        i
+                      </button>
+                      <span class="info-tip-text" id="tip-cost-ratio" role="tooltip" aria-hidden="true"
+                        >Expenses plus fees as a percentage of income. Lower is generally better.</span
+                      >
                     </span>
                   </dt>
                   <dd id="incomeKpiCostToIncome">0.00%</dd>
@@ -1057,7 +1175,7 @@
                   </details>
                 </div>
               </details>
-            </aside>
+            </section>
           </div>
         </section>
 
@@ -1065,6 +1183,7 @@
           class="tool-panel"
           id="tool-simple-fund"
           data-tool-panel
+          role="tabpanel"
           hidden
           aria-labelledby="tab-simple-fund"
         >
@@ -1113,7 +1232,7 @@
                     <p class="note fund-input-note">Income-focused model. Capital value stays fixed unless you add or withdraw capital.</p>
                   </div>
 
-                  <aside class="fund-assumption-card" aria-label="Fund mechanics">
+                  <div class="fund-assumption-card" aria-label="Fund mechanics">
                     <h4 class="net-subgroup-title">Fund Mechanics</h4>
                     <dl class="fund-assumption-list">
                       <div>
@@ -1129,7 +1248,7 @@
                         <dd>7.85%</dd>
                       </div>
                     </dl>
-                  </aside>
+                  </div>
                 </div>
 
                 <div class="fund-presets" role="group" aria-label="Quick investment amounts">
@@ -1165,7 +1284,7 @@
                   </article>
                 </div>
 
-                <div class="fund-table-wrap">
+                <div class="fund-table-wrap" tabindex="0" aria-label="Fund distribution schedule table (scroll horizontally)">
                   <table class="fund-table">
                     <thead>
                       <tr>
@@ -1187,12 +1306,21 @@
               </section>
             </form>
 
-            <aside class="panel panel-results fund-results-panel results-panel-standard" id="fundResultsDock" aria-live="polite">
+            <section class="panel panel-results fund-results-panel results-panel-standard" id="fundResultsDock">
               <h3>3. Distribution Summary</h3>
 
               <section class="results-hero results-hero-fund" aria-label="Primary fund outcome">
                 <p class="results-hero-label">Total projected distribution (12 months)</p>
-                <p class="results-hero-value" id="fundAnnualDistribution">$0.00</p>
+                <p
+                  class="results-hero-value"
+                  id="fundAnnualDistribution"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                  aria-label="Total projected distribution twelve months"
+                >
+                  $0.00
+                </p>
                 <p class="results-hero-note">Income projection using the current target annual rate.</p>
               </section>
               <section class="results-trend-grid results-trend-grid-fund" aria-label="Distribution trend layer">
@@ -1263,7 +1391,7 @@
                 Default cash rate is 3.85% (RBA target cash rate, as at 11 Mar 2026). Source:
                 <a href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noreferrer">RBA Cash Rate</a>.
               </p>
-            </aside>
+            </section>
           </div>
         </section>
       </section>

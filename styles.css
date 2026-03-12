@@ -1,4 +1,9 @@
+/* ================================
+   Design Tokens
+   ================================ */
 :root {
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Avenir Next", sans-serif;
   --page-bg: #091216;
   --page-bg-alt: #10222a;
   --card-bg: rgba(7, 20, 26, 0.72);
@@ -24,6 +29,9 @@
   --panel-padding: 1rem;
 }
 
+/* ================================
+   Global Base
+   ================================ */
 * {
   box-sizing: border-box;
 }
@@ -39,7 +47,7 @@ html {
 }
 
 body {
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   color: var(--text-main);
   background:
     radial-gradient(circle at 12% 12%, rgba(255, 164, 79, 0.16), transparent 34%),
@@ -47,6 +55,9 @@ body {
     linear-gradient(140deg, var(--page-bg) 0%, var(--page-bg-alt) 100%);
 }
 
+/* ================================
+   App Shell
+   ================================ */
 .page-shell {
   width: min(var(--content-max-width), 100% - 2.2rem);
   margin-inline: auto;
@@ -63,6 +74,9 @@ body {
   animation: reveal 500ms ease-out;
 }
 
+/* ================================
+   Tool Menu + Headings
+   ================================ */
 .header-block {
   margin-bottom: 1rem;
 }
@@ -80,7 +94,7 @@ h1,
 h2,
 h3,
 legend {
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
 }
 
 h1 {
@@ -108,7 +122,7 @@ h1 {
   border-radius: 999px;
   background: rgba(6, 20, 27, 0.52);
   color: var(--text-muted);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -181,7 +195,7 @@ h1 {
   border-radius: 999px;
   background: rgba(5, 17, 24, 0.5);
   color: var(--text-soft);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -214,6 +228,9 @@ h1 {
   gap: 0.95rem;
 }
 
+/* ================================
+   Shared Form Controls
+   ================================ */
 .panel {
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
@@ -236,22 +253,32 @@ legend {
   margin: 0.72rem 0 0.32rem;
 }
 
-.info-tip {
+.info-tip-wrap {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.32rem;
+  vertical-align: text-top;
+}
+
+.info-tip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1rem;
   height: 1rem;
-  margin-left: 0.32rem;
+  padding: 0;
   border: 1px solid rgba(188, 218, 223, 0.44);
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: 999px;
   color: rgba(255, 164, 79, 0.96);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.64rem;
   font-weight: 700;
   line-height: 1;
-  cursor: help;
+  cursor: pointer;
   vertical-align: text-top;
 }
 
@@ -272,21 +299,24 @@ legend {
   border-radius: 0.58rem;
   background: rgba(7, 20, 28, 0.96);
   color: rgba(241, 247, 247, 0.92);
-  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.32;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.36);
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
   z-index: 34;
-  transition: opacity 130ms ease;
+  transition: opacity 130ms ease, visibility 130ms ease;
 }
 
-.info-tip:hover .info-tip-text,
-.info-tip:focus .info-tip-text,
-.info-tip:focus-visible .info-tip-text {
+.info-tip:hover + .info-tip-text,
+.info-tip:focus-visible + .info-tip-text,
+.info-tip[aria-expanded="true"] + .info-tip-text {
   opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
 }
 
 input,
@@ -369,7 +399,7 @@ select:focus {
   list-style: none;
   margin: 0;
   padding: 0.52rem 0.62rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.74rem;
   font-weight: 600;
   color: rgba(241, 247, 247, 0.9);
@@ -392,6 +422,9 @@ select:focus {
   margin: 0;
 }
 
+/* ================================
+   Net Proceeds Tool
+   ================================ */
 .net-form {
   gap: 1.05rem;
 }
@@ -402,13 +435,6 @@ select:focus {
 
 .net-panel h3 {
   margin-bottom: 0.62rem;
-}
-
-#tool-net-proceeds .layout-grid,
-#tool-investment-income .layout-grid-investment,
-#tool-simple-fund .layout-grid-fund {
-  grid-template-columns: var(--tool-grid-main) var(--tool-grid-side);
-  gap: var(--tool-grid-gap);
 }
 
 .net-field-grid {
@@ -494,7 +520,7 @@ select:focus {
 
 .net-cost-list dd {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.96rem;
   font-weight: 600;
   text-align: right;
@@ -528,7 +554,7 @@ select:focus {
 
 .net-subgroup-title {
   margin: 0 0 0.48rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -563,6 +589,9 @@ select:focus {
   background: rgba(6, 20, 28, 0.58);
 }
 
+/* ================================
+   Simple Fund Tool
+   ================================ */
 .fund-form {
   gap: 1rem;
   min-width: 0;
@@ -618,7 +647,7 @@ select:focus {
 
 .fund-assumption-list dd {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -645,7 +674,7 @@ select:focus {
   border-radius: 999px;
   background: rgba(6, 20, 27, 0.5);
   color: var(--text-muted);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -692,7 +721,7 @@ select:focus {
 .fund-snapshot-item strong {
   display: block;
   margin-top: 0.22rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
 }
 
@@ -707,21 +736,46 @@ select:focus {
   color: #ffd4a8;
 }
 
-.fund-table-wrap {
-  margin-top: 0.74rem;
+/* Shared horizontal table wrapper */
+.fund-table-wrap,
+.statement-table-wrap {
   border: 1px solid rgba(188, 218, 223, 0.24);
   border-radius: 0.78rem;
   background: rgba(3, 14, 18, 0.55);
-  max-width: 100%;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
 
-.fund-table {
+/* Shared table shell */
+.fund-table,
+.statement-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
+}
+
+/* Shared table header style */
+.fund-table th,
+.statement-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.73rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(227, 244, 246, 0.76);
+  background: rgba(7, 20, 28, 0.86);
+}
+
+.fund-table-wrap {
+  margin-top: 0.74rem;
+  max-width: 100%;
+}
+
+.fund-table {
   min-width: 720px;
 }
 
@@ -730,19 +784,6 @@ select:focus {
   border-bottom: 1px solid rgba(188, 218, 223, 0.14);
   padding: 0.42rem 0.5rem;
   font-size: 0.8rem;
-}
-
-.fund-table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  text-align: left;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
-  font-size: 0.73rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(227, 244, 246, 0.76);
-  background: rgba(7, 20, 28, 0.86);
 }
 
 .fund-table td:first-child {
@@ -798,6 +839,9 @@ select:focus {
   min-width: 0;
 }
 
+/* ================================
+   Performance Tool
+   ================================ */
 .investment-form {
   gap: 1.05rem;
 }
@@ -901,7 +945,7 @@ select:focus {
 .statement-snapshot-item strong {
   display: block;
   margin-top: 0.2rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.92rem;
 }
 
@@ -938,7 +982,7 @@ select:focus {
   border-radius: 0.62rem;
   background: rgba(6, 20, 27, 0.52);
   color: var(--text-main);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.77rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -988,7 +1032,7 @@ select:focus {
 .quarter-rollup-card strong {
   display: block;
   margin-top: 0.16rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.96rem;
   line-height: 1.15;
 }
@@ -996,7 +1040,7 @@ select:focus {
 .quarter-rollup-card span {
   display: block;
   margin-top: 0.1rem;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.76rem;
   color: rgba(241, 247, 247, 0.82);
 }
@@ -1038,7 +1082,7 @@ select:focus {
 
 .health-status {
   margin: 0.28rem 0 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.24rem;
   font-weight: 700;
   line-height: 1.1;
@@ -1094,7 +1138,7 @@ select:focus {
 
 .kpi-value {
   margin: 0.28rem 0 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.02rem;
   font-weight: 700;
   line-height: 1.1;
@@ -1154,7 +1198,7 @@ select:focus {
 
 .sparkline-meta strong {
   color: var(--text-main);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.82rem;
 }
 
@@ -1193,7 +1237,7 @@ select:focus {
   font-size: 0.76rem;
   font-weight: 600;
   color: rgba(241, 247, 247, 0.9);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
 }
 
 .results-details summary::-webkit-details-marker {
@@ -1228,7 +1272,7 @@ select:focus {
   font-size: 0.74rem;
   font-weight: 600;
   color: rgba(241, 247, 247, 0.88);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
 }
 
 .results-subdetails summary::-webkit-details-marker {
@@ -1252,6 +1296,9 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(255, 164, 79, 0.22);
 }
 
+/* ================================
+   Mobile Month Cards
+   ================================ */
 .mobile-card-controls {
   display: none;
   margin-top: 0.62rem;
@@ -1266,7 +1313,7 @@ select:focus {
   border-radius: 0.62rem;
   background: rgba(6, 20, 27, 0.5);
   color: var(--text-muted);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1331,7 +1378,7 @@ select:focus {
   border: 1px solid rgba(188, 218, 223, 0.4);
   display: grid;
   place-items: center;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   line-height: 1;
   color: rgba(241, 247, 247, 0.86);
@@ -1382,7 +1429,7 @@ select:focus {
 
 .statement-card-net {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.1;
@@ -1391,7 +1438,7 @@ select:focus {
 
 .statement-card-margin {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.78rem;
   line-height: 1.1;
 }
@@ -1451,7 +1498,7 @@ select:focus {
 }
 
 .fund-card-summary-amount strong {
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   color: #ffd4a8;
 }
@@ -1487,25 +1534,16 @@ select:focus {
 
 .fund-card-list dd {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.9rem;
   font-weight: 600;
 }
 
 .statement-table-wrap {
   margin-top: 0.8rem;
-  border: 1px solid rgba(188, 218, 223, 0.24);
-  border-radius: 0.78rem;
-  background: rgba(3, 14, 18, 0.55);
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
 }
 
 .statement-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
   min-width: 860px;
 }
 
@@ -1515,18 +1553,6 @@ select:focus {
   padding: 0.34rem 0.46rem;
   text-align: left;
   vertical-align: middle;
-}
-
-.statement-table th {
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
-  font-size: 0.73rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: rgba(227, 244, 246, 0.76);
-  background: rgba(7, 20, 28, 0.86);
-  position: sticky;
-  top: 0;
-  z-index: 1;
 }
 
 .statement-table td {
@@ -1561,7 +1587,7 @@ select:focus {
 
 .statement-table .statement-net,
 .statement-table .statement-margin {
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.82rem;
   white-space: nowrap;
 }
@@ -1581,7 +1607,7 @@ select:focus {
   background: rgba(8, 25, 34, 0.88);
   border-top: 1px solid rgba(188, 218, 223, 0.32);
   border-bottom: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -1594,6 +1620,9 @@ select:focus {
   z-index: 0;
 }
 
+/* ================================
+   Result Panels + Shared Outputs
+   ================================ */
 .panel-results {
   position: sticky;
   top: 1rem;
@@ -1638,7 +1667,7 @@ select:focus {
 
 .results-hero-label {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.74rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1647,7 +1676,7 @@ select:focus {
 
 .results-hero-value {
   margin: 0.3rem 0 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(1.7rem, 3vw, 2.2rem);
   font-weight: 700;
   line-height: 1;
@@ -1743,7 +1772,7 @@ select:focus {
 
 .result-list dd {
   margin: 0;
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 1rem;
 }
 
@@ -1800,7 +1829,7 @@ select:focus {
   border-radius: 0.7rem;
   background: linear-gradient(180deg, rgba(255, 164, 79, 0.26) 0%, rgba(255, 138, 33, 0.32) 100%);
   color: var(--text-main);
-  font-family: "Space Grotesk", "Avenir Next", sans-serif;
+  font-family: var(--font-display);
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -1880,6 +1909,9 @@ form[id] {
   text-decoration-color: rgba(255, 177, 93, 0.9);
 }
 
+/* ================================
+   Motion
+   ================================ */
 @keyframes reveal {
   from {
     opacity: 0;
@@ -1904,7 +1936,11 @@ form[id] {
   }
 }
 
+/* ================================
+   Responsive
+   ================================ */
 @media (max-width: 1200px) {
+  /* Desktop -> large tablet */
   .page-shell {
     width: min(100% - 1.6rem, var(--content-max-width));
   }
@@ -1931,6 +1967,7 @@ form[id] {
 }
 
 @media (max-width: 980px) {
+  /* Tablet */
   .page-shell {
     width: min(100% - 1rem, var(--content-max-width));
     margin-inline: auto;
@@ -2012,6 +2049,7 @@ form[id] {
 }
 
 @media (max-width: 760px) {
+  /* Mobile */
   .info-tip-text {
     left: auto;
     right: 0;
@@ -2080,7 +2118,7 @@ form[id] {
   .mobile-summary-metric strong {
     display: block;
     margin-top: 0.14rem;
-    font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    font-family: var(--font-display);
     font-size: 0.98rem;
     line-height: 1.1;
     color: var(--good);
@@ -2106,7 +2144,7 @@ form[id] {
     border-radius: 0.56rem;
     background: rgba(6, 20, 27, 0.58);
     color: var(--text-main);
-    font-family: "Space Grotesk", "Avenir Next", sans-serif;
+    font-family: var(--font-display);
     font-size: 0.69rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -2140,8 +2178,8 @@ form[id] {
 }
 
 @media (max-width: 640px) {
+  /* Small mobile */
   .page-shell {
-    width: min(100% - 1rem, var(--content-max-width));
     padding-top: 0.8rem;
   }
 
@@ -2265,10 +2303,6 @@ form[id] {
     grid-template-columns: 1fr;
   }
 
-  .statement-action-controls {
-    grid-template-columns: 1fr;
-  }
-
   .statement-action-btn {
     width: 100%;
   }
@@ -2279,6 +2313,7 @@ form[id] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Accessibility: reduce animation and transition intensity */
   *,
   *::before,
   *::after {
