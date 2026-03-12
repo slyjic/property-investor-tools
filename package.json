@@ -7,6 +7,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "build:bundle": "esbuild app.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app.bundle.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/slyjic/property-investor-tools#readme",
   "devDependencies": {
+    "esbuild": "^0.27.3",
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
     "jsdom": "^28.1.0",

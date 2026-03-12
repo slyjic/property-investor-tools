@@ -1,5 +1,6 @@
 node_modules/
 coverage/
+app.bundle.js
 package-lock.json
 app.js
 index.html

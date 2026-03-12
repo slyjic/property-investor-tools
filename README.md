@@ -22,7 +22,9 @@ A static multi-tool site for property investors.
 
 - `index.html` - tool menu, calculator UIs
 - `styles.css` - visual design, responsive layout, menu styles
-- `app.js` - tool switching + calculator logic + PDF generation
+- `app.js` - modular source entrypoint
+- `app.bundle.js` - browser bundle loaded by `index.html`
+- `js/` - calculator modules, shared runtime, UI helpers, PDF/reporting logic
 - `TECH_DEBT_TASKS.md` - prioritized cleanup backlog
 - `PRODUCT_DIRECTION.md` - product goals and cleanup guardrails
 
@@ -52,6 +54,12 @@ Auto-format supported files:
 
 ```bash
 npm run format
+```
+
+Rebuild browser bundle after JS changes:
+
+```bash
+npm run build:bundle
 ```
 
 ## Notes
