@@ -14,8 +14,16 @@ Includes a global portfolio summary PDF export from the page header.
   - Current dataset badge and last-used dataset restore
   - JSON import/export for backups and sharing
   - PDF report export
-- Performance Calculator
+- Simple Performance Calculator
+  - Annual-only inputs for one-year snapshot (income, expenses, fees)
+  - Net operating cashflow, margin, yield, cost ratio, and health summary
+  - Ownership share scaling for annual and monthly net outcomes
+- Advanced Performance Calculator
   - Annual category totals and monthly cashflow tracking
+  - Statement Data Hub modal for dataset selection, imports, and month-level editing
+  - Statement import wizard for monthly rows (CSV and PDF)
+  - Auto-detects statement FY from statement dates and switches dataset when needed
+  - Main calculator view stays focused on compiled annual performance outcomes
   - Net annual/monthly outcomes, margin, and yield views
   - Year dataset selector with current-dataset badge and restore-last-year behavior
   - Compact multi-year trend summary (net, margin, yield) with sparkline
@@ -25,8 +33,7 @@ Includes a global portfolio summary PDF export from the page header.
 - Simple Investment Fund Calculator
   - Monthly income projection from a capital-stable model
   - 4.00% + RBA cash rate return assumption
-  - Year datasets (FY 2024-25 to FY 2028-29) with scenario save/load/reset
-  - JSON import/export for backups and sharing
+  - Scenario actions: reset plus JSON export/import
   - 12-month distribution schedule and summary
 
 ## Files

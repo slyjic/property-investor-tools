@@ -32,10 +32,10 @@ const run = async () => {
 
     await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
     add("net-tab-visible", true);
-    add("net-dataset-visible", await page.locator("#netDatasetYear").isVisible());
+    add("net-dataset-removed", !(await page.locator("#netDatasetYear").isVisible()));
     add(
-      "net-dataset-badge-visible",
-      await page.locator("[data-scenario-tool='net-proceeds'] [data-scenario-badge]").isVisible(),
+      "net-dataset-badge-removed",
+      !(await page.locator("[data-scenario-tool='net-proceeds'] [data-scenario-badge]").isVisible()),
     );
 
     const portfolioPdfButtonVisible = await page.locator("#downloadPortfolioSummaryPdf").isVisible();
@@ -61,34 +61,47 @@ const run = async () => {
     const pdfBtnVisible = await page.locator("#downloadPdf").isVisible();
     add("pdf-button-visible", pdfBtnVisible);
 
-    // Performance tab
-    await page.click("#tab-investment-income");
-    await page
-      .waitForSelector("#investment-income-calculator:not([hidden])", { timeout: 10000 })
-      .catch(() => {});
-    const perfVisible = await page.locator("#investment-income-calculator").isVisible();
-    add("performance-tab-opens", perfVisible);
-    add("performance-dataset-visible", await page.locator("#incomeDatasetYear").isVisible());
-    add(
-      "performance-dataset-badge-visible",
-      await page.locator("[data-scenario-tool='performance'] [data-scenario-badge]").isVisible(),
-    );
+    const advancedDisabled = await page.locator("#tab-investment-income").isDisabled();
+    add("advanced-performance-disabled", advancedDisabled);
+    if (!advancedDisabled) {
+      await page.click("#tab-investment-income");
+      await page
+        .waitForSelector("#investment-income-calculator:not([hidden])", { timeout: 10000 })
+        .catch(() => {});
+      const perfVisible = await page.locator("#investment-income-calculator").isVisible();
+      add("performance-tab-opens", perfVisible);
+      add("performance-dataset-visible", await page.locator("#incomeDatasetYear").isVisible());
+      add(
+        "performance-dataset-badge-visible",
+        await page.locator("[data-scenario-tool='performance'] [data-scenario-badge]").isVisible(),
+      );
 
-    const beforePerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
-    await page.fill("#incomeOwnershipPercent", "25");
+      const beforePerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
+      await page.fill("#incomeOwnershipPercent", "25");
+      await page.waitForTimeout(250);
+      const afterPerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
+      add("performance-live-update", afterPerf !== beforePerf, `before=${beforePerf}, after=${afterPerf}`);
+    }
+
+    // Simple performance tab
+    await page.click("#tab-simple-performance");
+    const simplePerfVisible = await page.locator("#simple-performance-calculator").isVisible();
+    add("simple-performance-tab-opens", simplePerfVisible);
+    const beforeSimplePerf = parseMoney(await page.locator("#simplePerfNetShare").textContent());
+    await page.fill("#simplePerfOwnershipPercent", "25");
     await page.waitForTimeout(250);
-    const afterPerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
-    add("performance-live-update", afterPerf !== beforePerf, `before=${beforePerf}, after=${afterPerf}`);
+    const afterSimplePerf = parseMoney(await page.locator("#simplePerfNetShare").textContent());
+    add(
+      "simple-performance-live-update",
+      afterSimplePerf !== beforeSimplePerf,
+      `before=${beforeSimplePerf}, after=${afterSimplePerf}`,
+    );
 
     // Fund tab
     await page.click("#tab-simple-fund");
     const fundVisible = await page.locator("#simple-fund-calculator").isVisible();
     add("fund-tab-opens", fundVisible);
-    add("fund-dataset-visible", await page.locator("#fundDatasetYear").isVisible());
-    add(
-      "fund-dataset-badge-visible",
-      await page.locator("[data-scenario-tool='simple-fund'] [data-scenario-badge]").isVisible(),
-    );
+    add("fund-dataset-removed", !(await page.locator("#fundDatasetYear").isVisible()));
 
     const beforeFund = parseMoney(await page.locator("#fundAnnualDistribution").textContent());
     await page.click("#fundInvestmentAmount");
