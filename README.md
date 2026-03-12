@@ -67,3 +67,31 @@ npm run build:bundle
 
 - This is a planning tool, not financial or tax advice.
 - CGT estimates do not include every rule (offsets, levies, HELP, etc.).
+
+## Rate Update Checklist
+
+1. Update tax brackets in `js/config/constants.js` (`TAX_BRACKETS`).
+2. Update fund return assumptions in `js/config/constants.js` (`FUND_BASE_SPREAD_PERCENT`, `FUND_RBA_CASH_RATE_PERCENT`).
+3. Confirm labels and copy in `index.html` still match the updated rates/years.
+4. Run quality gates:
+   - `npm run lint`
+   - `npm run format:check`
+   - `npm test`
+   - `npm run audit:a11y`
+5. Rebuild browser bundle: `npm run build:bundle`.
+
+## Pre-Deploy Checklist
+
+1. Install dependencies: `npm install`.
+2. Run quality gates:
+   - `npm run lint`
+   - `npm run format:check`
+   - `npm test`
+   - `npm run audit:a11y`
+3. Build bundle: `npm run build:bundle`.
+4. Smoke test in browser:
+   - Tab switching works.
+   - Net Proceeds values update live and PDF export works.
+   - Performance calculator monthly edits and summary KPIs update.
+   - Fund calculator presets/manual input update schedule and totals.
+5. Deploy the `property-sale-calculator` folder contents to hosting.

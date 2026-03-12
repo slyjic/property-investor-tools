@@ -11,6 +11,7 @@ import {
   readNumber,
   sanitizeCurrencyInput,
   setOutputValue,
+  setTextContent,
   unformatCurrencyInput,
 } from "../shared/runtime.js";
 
@@ -72,7 +73,7 @@ export const initNetProceedsCalculator = () => {
     if (!fields.pdfStatus) {
       return;
     }
-    fields.pdfStatus.textContent = message;
+    setTextContent(fields.pdfStatus, message);
     fields.pdfStatus.classList.remove("is-success", "is-error");
 
     if (tone === "success") {
@@ -89,7 +90,7 @@ export const initNetProceedsCalculator = () => {
     if (message) {
       statusTimerId = window.setTimeout(() => {
         if (fields.pdfStatus) {
-          fields.pdfStatus.textContent = "";
+          setTextContent(fields.pdfStatus, "");
           fields.pdfStatus.classList.remove("is-success", "is-error");
         }
       }, 5200);
@@ -141,7 +142,7 @@ export const initNetProceedsCalculator = () => {
     latestReport = calculation;
 
     if (fields.outputOwnershipApplied) {
-      fields.outputOwnershipApplied.textContent = `${calculation.ownershipPercent.toFixed(2)}%`;
+      setTextContent(fields.outputOwnershipApplied, `${calculation.ownershipPercent.toFixed(2)}%`);
     }
     setOutputValue(fields.outputAgentFee, calculation.agentFeeWhole);
     setOutputValue(fields.outputAdditionalSellingCosts, calculation.additionalSellingCostsWhole);

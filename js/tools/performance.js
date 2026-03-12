@@ -5,13 +5,14 @@ import {
   clampPercentInput,
   formatCurrencyInput,
   formatMoney,
-  formatPercent,
   readNumber,
   renderSparkline,
   sanitizeCurrencyInput,
   setDetailsOpenState,
   setOutputValue,
+  setPercentOutputValue,
   setSignedClass,
+  setTextContent,
   setTrendToneClass,
   toEditableNumberString,
   unformatCurrencyInput,
@@ -112,34 +113,15 @@ export const initPerformanceCalculator = () => {
   const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
   let monthRows = [];
 
-  const setPercentOutput = (element, value, useSignClass = false) => {
-    if (!element) {
-      return;
-    }
-
-    element.textContent = formatPercent(value);
-    if (useSignClass) {
-      setSignedClass(element, value);
-    }
-  };
-
   const setLabelledMoneyOutput = (element, label, value, useSignClass = false) => {
     if (!element) {
       return;
     }
 
-    element.textContent = `${label || "-"}: ${formatMoney(value)}`;
+    setTextContent(element, `${label || "-"}: ${formatMoney(value)}`);
     if (useSignClass) {
       setSignedClass(element, value);
     }
-  };
-
-  const setTextOutput = (element, text) => {
-    if (!element) {
-      return;
-    }
-
-    element.textContent = text;
   };
 
   const setHealthState = (status, note, tone) => {
@@ -159,18 +141,18 @@ export const initPerformanceCalculator = () => {
     };
 
     if (incomeFields.outputHealthStatus) {
-      incomeFields.outputHealthStatus.textContent = status;
+      setTextContent(incomeFields.outputHealthStatus, status);
       applyToneClass(incomeFields.outputHealthStatus);
     }
     if (incomeFields.outputHealthStatusCard) {
-      incomeFields.outputHealthStatusCard.textContent = status;
+      setTextContent(incomeFields.outputHealthStatusCard, status);
       applyToneClass(incomeFields.outputHealthStatusCard);
     }
     if (incomeFields.outputHealthNote) {
-      incomeFields.outputHealthNote.textContent = note;
+      setTextContent(incomeFields.outputHealthNote, note);
     }
     if (incomeFields.outputHealthNoteCard) {
-      incomeFields.outputHealthNoteCard.textContent = note;
+      setTextContent(incomeFields.outputHealthNoteCard, note);
     }
   };
 
@@ -211,7 +193,7 @@ export const initPerformanceCalculator = () => {
       if (!element) {
         return;
       }
-      element.textContent = formatMoney(netValue);
+      setTextContent(element, formatMoney(netValue));
       setSignedClass(element, netValue);
     });
 
@@ -219,8 +201,7 @@ export const initPerformanceCalculator = () => {
       if (!element) {
         return;
       }
-      element.textContent = formatPercent(netMarginPercent);
-      setSignedClass(element, netMarginPercent);
+      setPercentOutputValue(element, netMarginPercent, true);
     });
   };
 
@@ -579,8 +560,8 @@ export const initPerformanceCalculator = () => {
     setOutputValue(incomeFields.outputAnnualExpenses, annualExpenses);
     setOutputValue(incomeFields.outputAnnualFees, annualFees);
     setOutputValue(incomeFields.outputAnnualNet, performance.annualNet, true);
-    setPercentOutput(incomeFields.outputGrossYield, performance.grossYield);
-    setPercentOutput(incomeFields.outputNetYield, performance.netYield, true);
+    setPercentOutputValue(incomeFields.outputGrossYield, performance.grossYield);
+    setPercentOutputValue(incomeFields.outputNetYield, performance.netYield, true);
     setOutputValue(incomeFields.outputMonthlyNet, performance.monthlyNet, true);
     setOutputValue(incomeFields.outputMonthlyAverageNet, performance.monthlyAverageNet, true);
     setOutputValue(incomeFields.outputOwnerDisbursements, performance.monthlyDisbursementTotal);
@@ -604,11 +585,11 @@ export const initPerformanceCalculator = () => {
     setOutputValue(incomeFields.outputTableTotalFees, performance.monthlyFeesTotal);
     setOutputValue(incomeFields.outputTableTotalDisbursement, performance.monthlyDisbursementTotal);
     setOutputValue(incomeFields.outputTableTotalNet, performance.monthlyNet, true);
-    setPercentOutput(incomeFields.outputTableTotalMargin, performance.monthlyNetMargin, true);
+    setPercentOutputValue(incomeFields.outputTableTotalMargin, performance.monthlyNetMargin, true);
     setOutputValue(incomeFields.outputMonthlyStripIncome, performance.monthlyIncomeTotal);
     setOutputValue(incomeFields.outputMonthlyStripNet, performance.monthlyNet, true);
     setOutputValue(incomeFields.outputMonthlyStripAvg, performance.monthlyAverageNet, true);
-    setTextOutput(
+    setTextContent(
       incomeFields.outputMonthlyStripPositive,
       `${performance.positiveMonths} / ${months.length}`,
     );
@@ -628,27 +609,27 @@ export const initPerformanceCalculator = () => {
 
     performance.quarterSummaries.forEach((quarter, index) => {
       setOutputValue(quarterNetOutputs[index], quarter.net, true);
-      setPercentOutput(quarterMarginOutputs[index], quarter.margin, true);
+      setPercentOutputValue(quarterMarginOutputs[index], quarter.margin, true);
     });
 
     setOutputValue(incomeFields.outputKpiNetShare, performance.yourShareNet, true);
     setOutputValue(incomeFields.outputKpiNetShareCard, performance.yourShareNet, true);
     setOutputValue(incomeFields.outputMobileSummaryNet, performance.yourShareNet, true);
-    setPercentOutput(incomeFields.outputKpiNetYield, performance.netYield, true);
-    setPercentOutput(incomeFields.outputKpiNetYieldCard, performance.netYield, true);
-    setPercentOutput(incomeFields.outputKpiNetMargin, performance.annualMargin, true);
-    setPercentOutput(incomeFields.outputKpiNetMarginCard, performance.annualMargin, true);
-    setPercentOutput(incomeFields.outputKpiCostToIncome, performance.costToIncome);
-    setPercentOutput(incomeFields.outputKpiCostToIncomeCard, performance.costToIncome);
-    setTextOutput(incomeFields.outputKpiPositiveMonths, `${performance.positiveMonths} / ${months.length}`);
-    setTextOutput(
+    setPercentOutputValue(incomeFields.outputKpiNetYield, performance.netYield, true);
+    setPercentOutputValue(incomeFields.outputKpiNetYieldCard, performance.netYield, true);
+    setPercentOutputValue(incomeFields.outputKpiNetMargin, performance.annualMargin, true);
+    setPercentOutputValue(incomeFields.outputKpiNetMarginCard, performance.annualMargin, true);
+    setPercentOutputValue(incomeFields.outputKpiCostToIncome, performance.costToIncome);
+    setPercentOutputValue(incomeFields.outputKpiCostToIncomeCard, performance.costToIncome);
+    setTextContent(incomeFields.outputKpiPositiveMonths, `${performance.positiveMonths} / ${months.length}`);
+    setTextContent(
       incomeFields.outputKpiPositiveMonthsCard,
       `${performance.positiveMonths} / ${months.length}`,
     );
     setOutputValue(incomeFields.outputKpiRetainedCash, performance.retainedCash, true);
 
     setOutputValue(incomeFields.outputTrendNetLatest, performance.latestNet, true);
-    setPercentOutput(incomeFields.outputTrendMarginLatest, performance.latestMargin, true);
+    setPercentOutputValue(incomeFields.outputTrendMarginLatest, performance.latestMargin, true);
 
     renderSparkline(incomeFields.outputTrendNetSparkline, performance.monthNetSeries, {
       baseline: 0,

@@ -191,14 +191,31 @@
     }
     input.value = toEditableNumberString(Math.max(0, parsed));
   };
+  var setTextContent = (element, value) => {
+    if (!element) {
+      return false;
+    }
+    const nextValue = String(value ?? "");
+    if (element.textContent === nextValue) {
+      return false;
+    }
+    element.textContent = nextValue;
+    return true;
+  };
   var setSignedClass = (element, value) => {
     if (!element) {
       return;
     }
+    const nextTone = value > 0 ? "positive" : value < 0 ? "negative" : "none";
+    const currentTone = element.dataset.signTone || "none";
+    if (currentTone === nextTone) {
+      return;
+    }
+    element.dataset.signTone = nextTone;
     element.classList.remove("value-positive", "value-negative");
-    if (value > 0) {
+    if (nextTone === "positive") {
       element.classList.add("value-positive");
-    } else if (value < 0) {
+    } else if (nextTone === "negative") {
       element.classList.add("value-negative");
     }
   };
@@ -206,7 +223,16 @@
     if (!element) {
       return;
     }
-    element.textContent = formatMoney(value);
+    setTextContent(element, formatMoney(value));
+    if (useSignClass) {
+      setSignedClass(element, value);
+    }
+  };
+  var setPercentOutputValue = (element, value, useSignClass = false) => {
+    if (!element) {
+      return;
+    }
+    setTextContent(element, formatPercent(value));
     if (useSignClass) {
       setSignedClass(element, value);
     }
@@ -215,12 +241,17 @@
     if (!element) {
       return;
     }
+    const nextTone = value > 0 ? "positive" : value < 0 ? "negative" : "neutral";
+    if (element.dataset.trendTone === nextTone) {
+      return;
+    }
+    element.dataset.trendTone = nextTone;
     element.classList.remove("is-positive", "is-negative", "is-neutral");
-    if (value > 0) {
+    if (nextTone === "positive") {
       element.classList.add("is-positive");
       return;
     }
-    if (value < 0) {
+    if (nextTone === "negative") {
       element.classList.add("is-negative");
       return;
     }
@@ -245,9 +276,23 @@
     }
     const safeValues = Array.isArray(values) ? values.map((value) => Number.isFinite(value) ? value : 0) : [];
     if (!safeValues.length) {
-      svgElement.innerHTML = "";
+      if (svgElement.innerHTML) {
+        svgElement.innerHTML = "";
+      }
+      delete svgElement.dataset.sparklineSignature;
       return;
     }
+    const signature = JSON.stringify({
+      values: safeValues,
+      baseline: Number.isFinite(baseline) ? baseline : null,
+      lineColor,
+      areaColor,
+      baselineColor
+    });
+    if (svgElement.dataset.sparklineSignature === signature) {
+      return;
+    }
+    svgElement.dataset.sparklineSignature = signature;
     const width = 300;
     const height = 88;
     const padX = 6;
@@ -338,12 +383,6 @@
       year: "numeric"
     });
     let fundCardsExpanded = false;
-    const setPercentOutput = (element, value) => {
-      if (!element) {
-        return;
-      }
-      element.textContent = formatPercent(value);
-    };
     const clearNodeChildren = (node) => {
       if (node) {
         node.textContent = "";
@@ -451,9 +490,9 @@
         startDate: /* @__PURE__ */ new Date(),
         months: 12
       });
-      setPercentOutput(fundFields.outputCashRate, FUND_RBA_CASH_RATE_PERCENT);
-      setPercentOutput(fundFields.outputAnnualRate, projection.annualRatePercent);
-      setPercentOutput(fundFields.outputMonthlyRate, projection.monthlyRatePercent);
+      setPercentOutputValue(fundFields.outputCashRate, FUND_RBA_CASH_RATE_PERCENT);
+      setPercentOutputValue(fundFields.outputAnnualRate, projection.annualRatePercent);
+      setPercentOutputValue(fundFields.outputMonthlyRate, projection.monthlyRatePercent);
       setOutputValue(fundFields.outputMonthlyDistribution, projection.monthlyDistribution);
       setOutputValue(fundFields.outputAnnualDistribution, projection.annualDistribution);
       setOutputValue(fundFields.outputMobileSummaryAnnual, projection.annualDistribution);
@@ -478,7 +517,7 @@
       setTrendToneClass(fundFields.trendMonthlyCard, projection.monthlyDistribution);
       setTrendToneClass(fundFields.trendCumulativeCard, projection.annualDistribution);
       if (fundFields.outputStartDate) {
-        fundFields.outputStartDate.textContent = dateFormatter.format(projection.projectionStartDate);
+        setTextContent(fundFields.outputStartDate, dateFormatter.format(projection.projectionStartDate));
       }
       syncPresetButtonState(investmentAmount);
       renderDistributionRows(projection.rows);
@@ -897,7 +936,7 @@
       if (!fields.pdfStatus) {
         return;
       }
-      fields.pdfStatus.textContent = message;
+      setTextContent(fields.pdfStatus, message);
       fields.pdfStatus.classList.remove("is-success", "is-error");
       if (tone === "success") {
         fields.pdfStatus.classList.add("is-success");
@@ -911,7 +950,7 @@
       if (message) {
         statusTimerId = window.setTimeout(() => {
           if (fields.pdfStatus) {
-            fields.pdfStatus.textContent = "";
+            setTextContent(fields.pdfStatus, "");
             fields.pdfStatus.classList.remove("is-success", "is-error");
           }
         }, 5200);
@@ -957,7 +996,7 @@
       });
       latestReport = calculation;
       if (fields.outputOwnershipApplied) {
-        fields.outputOwnershipApplied.textContent = `${calculation.ownershipPercent.toFixed(2)}%`;
+        setTextContent(fields.outputOwnershipApplied, `${calculation.ownershipPercent.toFixed(2)}%`);
       }
       setOutputValue(fields.outputAgentFee, calculation.agentFeeWhole);
       setOutputValue(fields.outputAdditionalSellingCosts, calculation.additionalSellingCostsWhole);
@@ -1255,29 +1294,14 @@
     };
     const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
     let monthRows = [];
-    const setPercentOutput = (element, value, useSignClass = false) => {
-      if (!element) {
-        return;
-      }
-      element.textContent = formatPercent(value);
-      if (useSignClass) {
-        setSignedClass(element, value);
-      }
-    };
     const setLabelledMoneyOutput = (element, label, value, useSignClass = false) => {
       if (!element) {
         return;
       }
-      element.textContent = `${label || "-"}: ${formatMoney(value)}`;
+      setTextContent(element, `${label || "-"}: ${formatMoney(value)}`);
       if (useSignClass) {
         setSignedClass(element, value);
       }
-    };
-    const setTextOutput = (element, text) => {
-      if (!element) {
-        return;
-      }
-      element.textContent = text;
     };
     const setHealthState = (status, note, tone) => {
       const applyToneClass = (element) => {
@@ -1294,18 +1318,18 @@
         }
       };
       if (incomeFields.outputHealthStatus) {
-        incomeFields.outputHealthStatus.textContent = status;
+        setTextContent(incomeFields.outputHealthStatus, status);
         applyToneClass(incomeFields.outputHealthStatus);
       }
       if (incomeFields.outputHealthStatusCard) {
-        incomeFields.outputHealthStatusCard.textContent = status;
+        setTextContent(incomeFields.outputHealthStatusCard, status);
         applyToneClass(incomeFields.outputHealthStatusCard);
       }
       if (incomeFields.outputHealthNote) {
-        incomeFields.outputHealthNote.textContent = note;
+        setTextContent(incomeFields.outputHealthNote, note);
       }
       if (incomeFields.outputHealthNoteCard) {
-        incomeFields.outputHealthNoteCard.textContent = note;
+        setTextContent(incomeFields.outputHealthNoteCard, note);
       }
     };
     const syncPairedInputValue = (source, target) => {
@@ -1340,15 +1364,14 @@
         if (!element) {
           return;
         }
-        element.textContent = formatMoney(netValue);
+        setTextContent(element, formatMoney(netValue));
         setSignedClass(element, netValue);
       });
       [rowData.outputMargin, rowData.outputMarginMobile].forEach((element) => {
         if (!element) {
           return;
         }
-        element.textContent = formatPercent(netMarginPercent);
-        setSignedClass(element, netMarginPercent);
+        setPercentOutputValue(element, netMarginPercent, true);
       });
     };
     const getRowInputByKey = (rowData, key, useMobile = false) => {
@@ -1431,7 +1454,13 @@
       const inputs = {};
       monthFieldConfig.forEach(({ key, label, value }) => {
         const cell = document.createElement("td");
-        const input = createMonthInput({ index, field: key, value, monthLabel: month.label, fieldLabel: label });
+        const input = createMonthInput({
+          index,
+          field: key,
+          value,
+          monthLabel: month.label,
+          fieldLabel: label
+        });
         cell.appendChild(input);
         row.appendChild(cell);
         inputs[key] = input;
@@ -1637,8 +1666,8 @@
       setOutputValue(incomeFields.outputAnnualExpenses, annualExpenses);
       setOutputValue(incomeFields.outputAnnualFees, annualFees);
       setOutputValue(incomeFields.outputAnnualNet, performance.annualNet, true);
-      setPercentOutput(incomeFields.outputGrossYield, performance.grossYield);
-      setPercentOutput(incomeFields.outputNetYield, performance.netYield, true);
+      setPercentOutputValue(incomeFields.outputGrossYield, performance.grossYield);
+      setPercentOutputValue(incomeFields.outputNetYield, performance.netYield, true);
       setOutputValue(incomeFields.outputMonthlyNet, performance.monthlyNet, true);
       setOutputValue(incomeFields.outputMonthlyAverageNet, performance.monthlyAverageNet, true);
       setOutputValue(incomeFields.outputOwnerDisbursements, performance.monthlyDisbursementTotal);
@@ -1661,14 +1690,11 @@
       setOutputValue(incomeFields.outputTableTotalFees, performance.monthlyFeesTotal);
       setOutputValue(incomeFields.outputTableTotalDisbursement, performance.monthlyDisbursementTotal);
       setOutputValue(incomeFields.outputTableTotalNet, performance.monthlyNet, true);
-      setPercentOutput(incomeFields.outputTableTotalMargin, performance.monthlyNetMargin, true);
+      setPercentOutputValue(incomeFields.outputTableTotalMargin, performance.monthlyNetMargin, true);
       setOutputValue(incomeFields.outputMonthlyStripIncome, performance.monthlyIncomeTotal);
       setOutputValue(incomeFields.outputMonthlyStripNet, performance.monthlyNet, true);
       setOutputValue(incomeFields.outputMonthlyStripAvg, performance.monthlyAverageNet, true);
-      setTextOutput(
-        incomeFields.outputMonthlyStripPositive,
-        `${performance.positiveMonths} / ${months.length}`
-      );
+      setTextContent(incomeFields.outputMonthlyStripPositive, `${performance.positiveMonths} / ${months.length}`);
       const quarterNetOutputs = [
         incomeFields.outputQuarter1Net,
         incomeFields.outputQuarter2Net,
@@ -1683,25 +1709,25 @@
       ];
       performance.quarterSummaries.forEach((quarter, index) => {
         setOutputValue(quarterNetOutputs[index], quarter.net, true);
-        setPercentOutput(quarterMarginOutputs[index], quarter.margin, true);
+        setPercentOutputValue(quarterMarginOutputs[index], quarter.margin, true);
       });
       setOutputValue(incomeFields.outputKpiNetShare, performance.yourShareNet, true);
       setOutputValue(incomeFields.outputKpiNetShareCard, performance.yourShareNet, true);
       setOutputValue(incomeFields.outputMobileSummaryNet, performance.yourShareNet, true);
-      setPercentOutput(incomeFields.outputKpiNetYield, performance.netYield, true);
-      setPercentOutput(incomeFields.outputKpiNetYieldCard, performance.netYield, true);
-      setPercentOutput(incomeFields.outputKpiNetMargin, performance.annualMargin, true);
-      setPercentOutput(incomeFields.outputKpiNetMarginCard, performance.annualMargin, true);
-      setPercentOutput(incomeFields.outputKpiCostToIncome, performance.costToIncome);
-      setPercentOutput(incomeFields.outputKpiCostToIncomeCard, performance.costToIncome);
-      setTextOutput(incomeFields.outputKpiPositiveMonths, `${performance.positiveMonths} / ${months.length}`);
-      setTextOutput(
+      setPercentOutputValue(incomeFields.outputKpiNetYield, performance.netYield, true);
+      setPercentOutputValue(incomeFields.outputKpiNetYieldCard, performance.netYield, true);
+      setPercentOutputValue(incomeFields.outputKpiNetMargin, performance.annualMargin, true);
+      setPercentOutputValue(incomeFields.outputKpiNetMarginCard, performance.annualMargin, true);
+      setPercentOutputValue(incomeFields.outputKpiCostToIncome, performance.costToIncome);
+      setPercentOutputValue(incomeFields.outputKpiCostToIncomeCard, performance.costToIncome);
+      setTextContent(incomeFields.outputKpiPositiveMonths, `${performance.positiveMonths} / ${months.length}`);
+      setTextContent(
         incomeFields.outputKpiPositiveMonthsCard,
         `${performance.positiveMonths} / ${months.length}`
       );
       setOutputValue(incomeFields.outputKpiRetainedCash, performance.retainedCash, true);
       setOutputValue(incomeFields.outputTrendNetLatest, performance.latestNet, true);
-      setPercentOutput(incomeFields.outputTrendMarginLatest, performance.latestMargin, true);
+      setPercentOutputValue(incomeFields.outputTrendMarginLatest, performance.latestMargin, true);
       renderSparkline(incomeFields.outputTrendNetSparkline, performance.monthNetSeries, {
         baseline: 0,
         lineColor: "#69d49f",

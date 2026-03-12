@@ -6,18 +6,19 @@ Context: see `PRODUCT_DIRECTION.md` for product goals and cleanup guardrails.
 
 ## Current Snapshot
 
-- `index.html`: 1,273 lines
-- `styles.css`: 2,290 lines
-- `app.js`: 15 lines (entrypoint only)
+- `index.html`: 1,401 lines
+- `styles.css`: 2,325 lines
+- `app.js`: 17 lines (entrypoint only)
 - Modularized JS:
-  - `js/shared/runtime.js`: 217 lines
-  - `js/tools/netProceeds.js`: 232 lines
-  - `js/tools/performance.js`: 673 lines
-  - `js/tools/fund.js`: 239 lines
+  - `js/shared/runtime.js`: 292 lines
+  - `js/tools/netProceeds.js`: 236 lines
+  - `js/tools/performance.js`: 758 lines
+  - `js/tools/fund.js`: 292 lines
 - Quality checks:
   - `npm run format:check` passes
   - `npm run lint` passes
-  - `npm test` passes (20 regression tests)
+  - `npm test` passes (22 tests)
+  - `npm run audit:a11y` passes (0 violations)
 
 ## Prioritized Tasks
 
@@ -103,7 +104,7 @@ Status: Done on 12 Mar 2026.
 
 ### P2. Add light performance guardrails for high-frequency input updates
 
-Status: In progress (frame-coalesced input throttling added in net/fund tools on 12 Mar 2026; performance tool kept immediate updates to preserve live-month editing responsiveness and test determinism).
+Status: Done on 12 Mar 2026 (frame-coalesced input throttling in high-frequency paths plus changed-node output updates for text, tone classes, and sparklines).
 
 - Why: each input event triggers full recalculation and broad DOM writes.
 - Scope:
@@ -138,6 +139,8 @@ Status: Done on 12 Mar 2026.
   - PDF generation path is covered by automated check.
 
 ### P3. Documentation refresh
+
+Status: Done on 12 Mar 2026.
 
 - Why: README is outdated relative to current tool set and behavior.
 - Scope:

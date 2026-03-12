@@ -106,14 +106,36 @@ export const unformatCurrencyInput = (input) => {
   input.value = toEditableNumberString(Math.max(0, parsed));
 };
 
+export const setTextContent = (element, value) => {
+  if (!element) {
+    return false;
+  }
+
+  const nextValue = String(value ?? "");
+  if (element.textContent === nextValue) {
+    return false;
+  }
+
+  element.textContent = nextValue;
+  return true;
+};
+
 export const setSignedClass = (element, value) => {
   if (!element) {
     return;
   }
+
+  const nextTone = value > 0 ? "positive" : value < 0 ? "negative" : "none";
+  const currentTone = element.dataset.signTone || "none";
+  if (currentTone === nextTone) {
+    return;
+  }
+
+  element.dataset.signTone = nextTone;
   element.classList.remove("value-positive", "value-negative");
-  if (value > 0) {
+  if (nextTone === "positive") {
     element.classList.add("value-positive");
-  } else if (value < 0) {
+  } else if (nextTone === "negative") {
     element.classList.add("value-negative");
   }
 };
@@ -122,8 +144,19 @@ export const setOutputValue = (element, value, useSignClass = false) => {
   if (!element) {
     return;
   }
-  element.textContent = formatMoney(value);
+  setTextContent(element, formatMoney(value));
 
+  if (useSignClass) {
+    setSignedClass(element, value);
+  }
+};
+
+export const setPercentOutputValue = (element, value, useSignClass = false) => {
+  if (!element) {
+    return;
+  }
+
+  setTextContent(element, formatPercent(value));
   if (useSignClass) {
     setSignedClass(element, value);
   }
@@ -134,12 +167,18 @@ export const setTrendToneClass = (element, value) => {
     return;
   }
 
+  const nextTone = value > 0 ? "positive" : value < 0 ? "negative" : "neutral";
+  if (element.dataset.trendTone === nextTone) {
+    return;
+  }
+
+  element.dataset.trendTone = nextTone;
   element.classList.remove("is-positive", "is-negative", "is-neutral");
-  if (value > 0) {
+  if (nextTone === "positive") {
     element.classList.add("is-positive");
     return;
   }
-  if (value < 0) {
+  if (nextTone === "negative") {
     element.classList.add("is-negative");
     return;
   }
@@ -171,9 +210,24 @@ export const renderSparkline = (
 
   const safeValues = Array.isArray(values) ? values.map((value) => (Number.isFinite(value) ? value : 0)) : [];
   if (!safeValues.length) {
-    svgElement.innerHTML = "";
+    if (svgElement.innerHTML) {
+      svgElement.innerHTML = "";
+    }
+    delete svgElement.dataset.sparklineSignature;
     return;
   }
+
+  const signature = JSON.stringify({
+    values: safeValues,
+    baseline: Number.isFinite(baseline) ? baseline : null,
+    lineColor,
+    areaColor,
+    baselineColor,
+  });
+  if (svgElement.dataset.sparklineSignature === signature) {
+    return;
+  }
+  svgElement.dataset.sparklineSignature = signature;
 
   const width = 300;
   const height = 88;

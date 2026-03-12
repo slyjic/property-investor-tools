@@ -4,13 +4,14 @@ import {
   byId,
   createFrameScheduler,
   formatCurrencyInput,
-  formatPercent,
   formatCurrencyValue,
   readNumber,
   renderSparkline,
   sanitizeCurrencyInput,
   setDetailsOpenState,
   setOutputValue,
+  setPercentOutputValue,
+  setTextContent,
   setTrendToneClass,
   unformatCurrencyInput,
 } from "../shared/runtime.js";
@@ -59,14 +60,6 @@ export const initSimpleFundCalculator = () => {
   });
 
   let fundCardsExpanded = false;
-
-  const setPercentOutput = (element, value) => {
-    if (!element) {
-      return;
-    }
-
-    element.textContent = formatPercent(value);
-  };
 
   const clearNodeChildren = (node) => {
     if (node) {
@@ -205,9 +198,9 @@ export const initSimpleFundCalculator = () => {
       months: 12,
     });
 
-    setPercentOutput(fundFields.outputCashRate, FUND_RBA_CASH_RATE_PERCENT);
-    setPercentOutput(fundFields.outputAnnualRate, projection.annualRatePercent);
-    setPercentOutput(fundFields.outputMonthlyRate, projection.monthlyRatePercent);
+    setPercentOutputValue(fundFields.outputCashRate, FUND_RBA_CASH_RATE_PERCENT);
+    setPercentOutputValue(fundFields.outputAnnualRate, projection.annualRatePercent);
+    setPercentOutputValue(fundFields.outputMonthlyRate, projection.monthlyRatePercent);
     setOutputValue(fundFields.outputMonthlyDistribution, projection.monthlyDistribution);
     setOutputValue(fundFields.outputAnnualDistribution, projection.annualDistribution);
     setOutputValue(fundFields.outputMobileSummaryAnnual, projection.annualDistribution);
@@ -236,7 +229,7 @@ export const initSimpleFundCalculator = () => {
     setTrendToneClass(fundFields.trendCumulativeCard, projection.annualDistribution);
 
     if (fundFields.outputStartDate) {
-      fundFields.outputStartDate.textContent = dateFormatter.format(projection.projectionStartDate);
+      setTextContent(fundFields.outputStartDate, dateFormatter.format(projection.projectionStartDate));
     }
 
     syncPresetButtonState(investmentAmount);
