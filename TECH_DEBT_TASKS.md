@@ -78,6 +78,8 @@ Status: Done on 12 Mar 2026.
 
 ### P1. Accessibility hardening for helper tooltips and dynamic outputs
 
+Status: In progress (semantic tooltip controls and scoped live regions updated on 12 Mar 2026; formal Lighthouse/axe pass still pending).
+
 - Why: current custom help tips rely on hover/focus and need stronger semantic support.
 - Scope:
   - Replace non-semantic tooltip triggers with accessible button + `aria-describedby`.
