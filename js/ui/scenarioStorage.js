@@ -4,6 +4,8 @@ const CONTROL_SELECTOR = "input, select, textarea";
 const SCHEMA_VERSION = 2;
 const LAST_DATASET_PREFIX = "pit:last-dataset:";
 
+const isScenarioUiControl = (control) => Boolean(control?.closest?.("[data-scenario-controls]"));
+
 const controlKeyFor = (control) => {
   if (!control) {
     return "";
@@ -46,6 +48,9 @@ const collectFormSnapshot = (form) => {
   const controls = Array.from(form.querySelectorAll(CONTROL_SELECTOR));
 
   controls.forEach((control) => {
+    if (isScenarioUiControl(control)) {
+      return;
+    }
     const key = controlKeyFor(control);
     if (!key || key in values) {
       return;
@@ -61,6 +66,9 @@ const buildControlGroups = (form) => {
   const controls = Array.from(form.querySelectorAll(CONTROL_SELECTOR));
 
   controls.forEach((control) => {
+    if (isScenarioUiControl(control)) {
+      return;
+    }
     const key = controlKeyFor(control);
     if (!key) {
       return;
@@ -178,6 +186,7 @@ const wireScenarioControls = (container) => {
   const exportButton = container.querySelector("[data-scenario-action='export']");
   const importButton = container.querySelector("[data-scenario-action='import']");
   const importFileInput = container.querySelector("[data-scenario-action='import-file']");
+  const scenarioMenu = container.querySelector("[data-scenario-menu]");
 
   const defaultValues = collectFormSnapshot(form);
   let statusTimerId = null;
@@ -407,35 +416,46 @@ const wireScenarioControls = (container) => {
     scheduleAutosave();
   };
 
+  const closeScenarioMenu = () => {
+    if (scenarioMenu && scenarioMenu.open) {
+      scenarioMenu.open = false;
+    }
+  };
+
   form.addEventListener("input", onAutosaveEvent);
   form.addEventListener("change", onAutosaveEvent);
 
   if (saveButton) {
     saveButton.addEventListener("click", () => {
       saveToStorage(true, activeDatasetId);
+      closeScenarioMenu();
     });
   }
 
   if (loadButton) {
     loadButton.addEventListener("click", () => {
       loadFromStorage(true, activeDatasetId);
+      closeScenarioMenu();
     });
   }
 
   if (resetButton) {
     resetButton.addEventListener("click", () => {
       resetToDefaults();
+      closeScenarioMenu();
     });
   }
 
   if (exportButton) {
     exportButton.addEventListener("click", () => {
       exportSnapshot();
+      closeScenarioMenu();
     });
   }
 
   if (importButton && importFileInput) {
     importButton.addEventListener("click", () => {
+      closeScenarioMenu();
       importFileInput.click();
     });
   }
