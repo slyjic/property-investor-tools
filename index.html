@@ -81,7 +81,23 @@
               Investor context: this tool models disposal and tax outcomes, not full market valuation (cap rate/comparable
               sales methods).
             </p>
-            <div class="scenario-actions" data-scenario-controls data-scenario-tool="net-proceeds" data-scenario-form="property-calculator">
+            <div
+              class="scenario-actions"
+              data-scenario-controls
+              data-scenario-tool="net-proceeds"
+              data-scenario-form="property-calculator"
+              data-scenario-dataset-input="netDatasetYear"
+            >
+              <div class="scenario-dataset">
+                <label for="netDatasetYear">Dataset year</label>
+                <select id="netDatasetYear" name="netDatasetYear">
+                  <option value="fy-2024-25">FY 2024-25</option>
+                  <option value="fy-2025-26" selected>FY 2025-26</option>
+                  <option value="fy-2026-27">FY 2026-27</option>
+                  <option value="fy-2027-28">FY 2027-28</option>
+                  <option value="fy-2028-29">FY 2028-29</option>
+                </select>
+              </div>
               <div class="scenario-actions-row">
                 <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
                 <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
@@ -458,6 +474,26 @@
                 </p>
               </section>
 
+              <section class="history-panel" aria-label="Multi-year trend summary">
+                <h4 class="section-subtitle">Multi-Year Trend</h4>
+                <p class="history-note" id="incomeHistoryEmpty">
+                  Save at least two year datasets to compare long-term net, margin, and yield.
+                </p>
+                <div class="history-table-wrap" id="incomeHistoryTableWrap" hidden>
+                  <table class="history-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Dataset</th>
+                        <th scope="col">Net operating (your share)</th>
+                        <th scope="col">Net margin</th>
+                        <th scope="col">Net yield</th>
+                      </tr>
+                    </thead>
+                    <tbody id="incomeHistoryRows"></tbody>
+                  </table>
+                </div>
+              </section>
+
               <dl class="result-list result-list-key">
                 <div>
                   <dt>Ownership applied</dt>
@@ -536,7 +572,18 @@
               data-scenario-controls
               data-scenario-tool="performance"
               data-scenario-form="investment-income-calculator"
+              data-scenario-dataset-input="incomeDatasetYear"
             >
+              <div class="scenario-dataset">
+                <label for="incomeDatasetYear">Year dataset</label>
+                <select id="incomeDatasetYear" name="incomeDatasetYear">
+                  <option value="fy-2024-25" selected>FY 2024-25</option>
+                  <option value="fy-2025-26">FY 2025-26</option>
+                  <option value="fy-2026-27">FY 2026-27</option>
+                  <option value="fy-2027-28">FY 2027-28</option>
+                  <option value="fy-2028-29">FY 2028-29</option>
+                </select>
+              </div>
               <div class="scenario-actions-row">
                 <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
                 <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>
@@ -1228,7 +1275,23 @@
             <p class="tool-description tool-context">
               Capital is fixed in this model. Returns are paid as income, not capital growth.
             </p>
-            <div class="scenario-actions" data-scenario-controls data-scenario-tool="simple-fund" data-scenario-form="simple-fund-calculator">
+            <div
+              class="scenario-actions"
+              data-scenario-controls
+              data-scenario-tool="simple-fund"
+              data-scenario-form="simple-fund-calculator"
+              data-scenario-dataset-input="fundDatasetYear"
+            >
+              <div class="scenario-dataset">
+                <label for="fundDatasetYear">Dataset year</label>
+                <select id="fundDatasetYear" name="fundDatasetYear">
+                  <option value="fy-2024-25">FY 2024-25</option>
+                  <option value="fy-2025-26" selected>FY 2025-26</option>
+                  <option value="fy-2026-27">FY 2026-27</option>
+                  <option value="fy-2027-28">FY 2027-28</option>
+                  <option value="fy-2028-29">FY 2028-29</option>
+                </select>
+              </div>
               <div class="scenario-actions-row">
                 <button class="scenario-btn" type="button" data-scenario-action="save">Save</button>
                 <button class="scenario-btn" type="button" data-scenario-action="load">Load</button>

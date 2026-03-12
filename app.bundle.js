@@ -1212,6 +1212,108 @@
     };
   };
 
+  // js/shared/scenarioStorageKeys.js
+  var SCENARIO_STORAGE_PREFIX = "pit:scenario:";
+  var createScenarioStorageKey = (toolId, datasetId = "") => {
+    const safeToolId = String(toolId ?? "").trim();
+    if (!safeToolId) {
+      return "";
+    }
+    const safeDatasetId = String(datasetId ?? "").trim();
+    if (!safeDatasetId) {
+      return `${SCENARIO_STORAGE_PREFIX}${safeToolId}`;
+    }
+    return `${SCENARIO_STORAGE_PREFIX}${safeToolId}:${safeDatasetId}`;
+  };
+
+  // js/shared/performanceHistory.js
+  var toNumber = (value, fallback = 0) => {
+    const parsed = Number.parseFloat(String(value ?? "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  var readScenarioValues = (toolId, datasetId) => {
+    const datasetKey = createScenarioStorageKey(toolId, datasetId);
+    const legacyKey = createScenarioStorageKey(toolId);
+    const raw = window.localStorage.getItem(datasetKey) || window.localStorage.getItem(legacyKey);
+    if (!raw) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      const values = parsed && typeof parsed === "object" && parsed.values ? parsed.values : parsed;
+      if (!values || typeof values !== "object") {
+        return null;
+      }
+      return values;
+    } catch {
+      return null;
+    }
+  };
+  var readValueById = (values, id, fallback = 0) => toNumber(values[`id:${id}`], fallback);
+  var readMonthValue = (values, monthIndex, field, fallback = 0) => toNumber(values[`month:${monthIndex}:${field}`], fallback);
+  var computePerformanceMetricsFromScenarioValues = (values) => {
+    if (!values || typeof values !== "object") {
+      return null;
+    }
+    const annualIncome = readValueById(values, "incomeRentGst") + readValueById(values, "incomeRentGstFree") + readValueById(values, "incomeOutgoingsRecovered") + readValueById(values, "incomeOtherIncome");
+    const annualExpenses = readValueById(values, "incomeCouncilRates") + readValueById(values, "incomeWaterRates") + readValueById(values, "incomeInsurance") + readValueById(values, "incomeLandTax") + readValueById(values, "incomeGardening") + readValueById(values, "incomeFireSafety") + readValueById(values, "incomeRepairs") + readValueById(values, "incomeCapex") + readValueById(values, "incomeOtherExpenses");
+    const annualFees = readValueById(values, "incomeManagementFees") + readValueById(values, "incomeOtherFees");
+    const months = DEFAULT_STATEMENT_MONTHS.map((month, index) => ({
+      label: month.label,
+      income: readMonthValue(values, index, "income", month.income),
+      expenses: readMonthValue(values, index, "expenses", month.expenses),
+      fees: readMonthValue(values, index, "fees", month.fees),
+      disbursement: readMonthValue(values, index, "disbursement", month.disbursement)
+    }));
+    const performance = computePerformance({
+      propertyValue: readValueById(values, "incomePropertyValue"),
+      ownershipPercent: Math.min(100, Math.max(0, readValueById(values, "incomeOwnershipPercent", 100))),
+      startingCash: readValueById(values, "incomeStartingCash"),
+      annualIncome,
+      annualExpenses,
+      annualFees,
+      months
+    });
+    return {
+      netOperatingCashflowShare: performance.yourShareNet,
+      netMarginPercent: performance.annualMargin,
+      netYieldPercent: performance.netYield
+    };
+  };
+  var collectPerformanceHistoryRows = ({
+    datasetOptions,
+    currentDatasetId,
+    currentMetrics,
+    maxRows = 5
+  }) => {
+    const options = Array.isArray(datasetOptions) ? datasetOptions.slice(0, maxRows) : [];
+    const rows = [];
+    options.forEach((option) => {
+      if (!option || !option.id) {
+        return;
+      }
+      if (option.id === currentDatasetId && currentMetrics) {
+        rows.push({
+          datasetId: option.id,
+          label: option.label || option.id,
+          ...currentMetrics
+        });
+        return;
+      }
+      const savedValues = readScenarioValues("performance", option.id);
+      const metrics = computePerformanceMetricsFromScenarioValues(savedValues);
+      if (!metrics) {
+        return;
+      }
+      rows.push({
+        datasetId: option.id,
+        label: option.label || option.id,
+        ...metrics
+      });
+    });
+    return rows;
+  };
+
   // js/tools/performance.js
   var initPerformanceCalculator = () => {
     const incomeForm = document.querySelector("#investment-income-calculator");
@@ -1299,10 +1401,15 @@
       outputTrendMarginSparkline: byId("incomeMarginSparkline"),
       trendNetCard: byId("incomeNetTrendCard"),
       trendMarginCard: byId("incomeMarginTrendCard"),
-      outputMobileSummaryNet: byId("mobileIncomeNet")
+      outputMobileSummaryNet: byId("mobileIncomeNet"),
+      datasetSelector: byId("incomeDatasetYear"),
+      historyTableWrap: byId("incomeHistoryTableWrap"),
+      historyRowsBody: byId("incomeHistoryRows"),
+      historyEmpty: byId("incomeHistoryEmpty")
     };
     const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
     let monthRows = [];
+    let latestHistoryMetrics = null;
     const setLabelledMoneyOutput = (element, label, value, useSignClass = false) => {
       if (!element) {
         return;
@@ -1431,6 +1538,71 @@
       if (node) {
         node.textContent = "";
       }
+    };
+    const getDatasetOptions = () => {
+      const selector = incomeFields.datasetSelector;
+      if (!selector) {
+        return [];
+      }
+      return Array.from(selector.options).slice(0, 5).map((option) => ({
+        id: option.value,
+        label: String(option.textContent ?? option.value).trim()
+      }));
+    };
+    const applyTrendValueClass = (cell, value) => {
+      if (!cell) {
+        return;
+      }
+      cell.classList.remove("value-positive", "value-negative");
+      if (value > 0) {
+        cell.classList.add("value-positive");
+        return;
+      }
+      if (value < 0) {
+        cell.classList.add("value-negative");
+      }
+    };
+    const renderMultiYearTrend = () => {
+      if (!incomeFields.historyRowsBody || !incomeFields.historyTableWrap || !incomeFields.historyEmpty) {
+        return;
+      }
+      const currentDatasetId = incomeFields.datasetSelector ? incomeFields.datasetSelector.value : "";
+      const historyRows = collectPerformanceHistoryRows({
+        datasetOptions: getDatasetOptions(),
+        currentDatasetId,
+        currentMetrics: latestHistoryMetrics,
+        maxRows: 5
+      });
+      clearNodeChildren(incomeFields.historyRowsBody);
+      if (historyRows.length < 2) {
+        incomeFields.historyTableWrap.hidden = true;
+        setTextContent(
+          incomeFields.historyEmpty,
+          "Save at least two year datasets to compare long-term net, margin, and yield."
+        );
+        return;
+      }
+      historyRows.forEach((row) => {
+        const tableRow = document.createElement("tr");
+        const labelCell = document.createElement("td");
+        labelCell.textContent = row.label;
+        tableRow.appendChild(labelCell);
+        const netCell = document.createElement("td");
+        netCell.textContent = formatMoney(row.netOperatingCashflowShare);
+        applyTrendValueClass(netCell, row.netOperatingCashflowShare);
+        tableRow.appendChild(netCell);
+        const marginCell = document.createElement("td");
+        marginCell.textContent = `${row.netMarginPercent.toFixed(2)}%`;
+        applyTrendValueClass(marginCell, row.netMarginPercent);
+        tableRow.appendChild(marginCell);
+        const yieldCell = document.createElement("td");
+        yieldCell.textContent = `${row.netYieldPercent.toFixed(2)}%`;
+        applyTrendValueClass(yieldCell, row.netYieldPercent);
+        tableRow.appendChild(yieldCell);
+        incomeFields.historyRowsBody.appendChild(tableRow);
+      });
+      incomeFields.historyTableWrap.hidden = false;
+      setTextContent(incomeFields.historyEmpty, `Comparing ${historyRows.length} year datasets.`);
     };
     const createMonthInput = ({ index, field, value, monthLabel, fieldLabel, mobile = false }) => {
       const input = document.createElement("input");
@@ -1755,6 +1927,12 @@
       setTrendToneClass(incomeFields.trendNetCard, performance.latestNet);
       setTrendToneClass(incomeFields.trendMarginCard, performance.latestMargin);
       setHealthState(performance.health.status, performance.health.note, performance.health.tone);
+      latestHistoryMetrics = {
+        netOperatingCashflowShare: performance.yourShareNet,
+        netMarginPercent: performance.annualMargin,
+        netYieldPercent: performance.netYield
+      };
+      renderMultiYearTrend();
     };
     const wireIncomeCurrencyFormatting = () => {
       const incomeCurrencyInputs = Array.from(incomeForm.querySelectorAll("input[data-currency='true']"));
@@ -1842,6 +2020,13 @@
         calculateInvestmentIncome();
       });
     }
+    window.addEventListener("pit:scenario-updated", (event) => {
+      const detail = event.detail || {};
+      if (detail.toolId !== "performance") {
+        return;
+      }
+      renderMultiYearTrend();
+    });
     applyCategoryDefaults();
     wireIncomeCurrencyFormatting();
     formatAllIncomeCurrencyInputs();
@@ -1884,37 +2069,62 @@
     const element = document.getElementById(id);
     return Boolean(element && element.checked);
   };
-  var buildPortfolioSummaryPayload = () => ({
-    generatedAt: /* @__PURE__ */ new Date(),
-    netProceeds: {
-      ownershipPercent: parseNumberText(readInputValue("ownershipPercent")),
-      taxYear: readInputValue("taxYear"),
-      cgtDiscountApplied: readCheckboxValue("cgtDiscount"),
-      netSettlementCash: parseNumberText(readText("netProceeds")),
-      saleShare: parseNumberText(readText("saleShare")),
-      sellingCostsShare: parseNumberText(readText("totalSellingCosts")),
-      estimatedCgt: parseNumberText(readText("estimatedCgt")),
-      mortgagePayout: parseNumberText(readText("mortgageShare")),
-      afterTaxProfit: parseNumberText(readText("afterTaxProfit"))
-    },
-    performance: {
-      healthStatus: readText("incomeHealthStatus") || "-",
-      healthNote: readText("incomeHealthNote") || "-",
+  var readDatasetOptions = () => {
+    const datasetSelector = document.getElementById("incomeDatasetYear");
+    if (!datasetSelector) {
+      return [];
+    }
+    return Array.from(datasetSelector.options).slice(0, 5).map((option) => ({
+      id: option.value,
+      label: String(option.textContent ?? option.value).trim()
+    }));
+  };
+  var buildPortfolioSummaryPayload = () => {
+    const currentPerformanceMetrics = {
       netOperatingCashflowShare: parseNumberText(readText("incomeKpiNetShare")),
       netYieldPercent: parseNumberText(readText("incomeKpiNetYield")),
-      netMarginPercent: parseNumberText(readText("incomeKpiNetMargin")),
-      costRatioPercent: parseNumberText(readText("incomeKpiCostToIncome")),
-      positiveMonths: readText("incomeKpiPositiveMonths") || "-",
-      retainedCash: parseNumberText(readText("incomeKpiRetainedCash"))
-    },
-    fund: {
-      annualDistribution: parseNumberText(readText("fundAnnualDistribution")),
-      monthlyDistribution: parseNumberText(readText("fundMonthlyDistribution")),
-      annualRatePercent: parseNumberText(readText("fundAnnualRate")),
-      cashRatePercent: parseNumberText(readText("fundCashRate")),
-      capitalPreserved: parseNumberText(readText("fundCapitalPreserved"))
-    }
-  });
+      netMarginPercent: parseNumberText(readText("incomeKpiNetMargin"))
+    };
+    const currentDatasetId = readInputValue("incomeDatasetYear");
+    const performanceHistoryRows = collectPerformanceHistoryRows({
+      datasetOptions: readDatasetOptions(),
+      currentDatasetId,
+      currentMetrics: currentPerformanceMetrics,
+      maxRows: 5
+    });
+    return {
+      generatedAt: /* @__PURE__ */ new Date(),
+      netProceeds: {
+        ownershipPercent: parseNumberText(readInputValue("ownershipPercent")),
+        taxYear: readInputValue("taxYear"),
+        cgtDiscountApplied: readCheckboxValue("cgtDiscount"),
+        netSettlementCash: parseNumberText(readText("netProceeds")),
+        saleShare: parseNumberText(readText("saleShare")),
+        sellingCostsShare: parseNumberText(readText("totalSellingCosts")),
+        estimatedCgt: parseNumberText(readText("estimatedCgt")),
+        mortgagePayout: parseNumberText(readText("mortgageShare")),
+        afterTaxProfit: parseNumberText(readText("afterTaxProfit"))
+      },
+      performance: {
+        healthStatus: readText("incomeHealthStatus") || "-",
+        healthNote: readText("incomeHealthNote") || "-",
+        netOperatingCashflowShare: currentPerformanceMetrics.netOperatingCashflowShare,
+        netYieldPercent: currentPerformanceMetrics.netYieldPercent,
+        netMarginPercent: currentPerformanceMetrics.netMarginPercent,
+        costRatioPercent: parseNumberText(readText("incomeKpiCostToIncome")),
+        positiveMonths: readText("incomeKpiPositiveMonths") || "-",
+        retainedCash: parseNumberText(readText("incomeKpiRetainedCash"))
+      },
+      performanceHistoryRows,
+      fund: {
+        annualDistribution: parseNumberText(readText("fundAnnualDistribution")),
+        monthlyDistribution: parseNumberText(readText("fundMonthlyDistribution")),
+        annualRatePercent: parseNumberText(readText("fundAnnualRate")),
+        cashRatePercent: parseNumberText(readText("fundCashRate")),
+        capitalPreserved: parseNumberText(readText("fundCapitalPreserved"))
+      }
+    };
+  };
   var generatePortfolioSummaryPdfReport = ({ payload, formatMoney: formatMoney2, formatPercent: formatPercent2, setPdfStatus }) => {
     const jsPdfConstructor = window.jspdf && window.jspdf.jsPDF;
     if (!jsPdfConstructor) {
@@ -2110,6 +2320,15 @@
         { label: "RBA cash rate used", value: formatPercent2(payload.fund.cashRatePercent) },
         { label: "Capital available (withdrawable)", value: formatMoney2(payload.fund.capitalPreserved) }
       ]);
+      if (Array.isArray(payload.performanceHistoryRows) && payload.performanceHistoryRows.length >= 2) {
+        drawSection("4. Multi-Year Trend Snapshot");
+        drawRows(
+          payload.performanceHistoryRows.map((row) => ({
+            label: row.label,
+            value: `${formatMoney2(row.netOperatingCashflowShare)} | Margin ${formatPercent2(row.netMarginPercent)} | Yield ${formatPercent2(row.netYieldPercent)}`
+          }))
+        );
+      }
       ensureSpace(28);
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8.5);
@@ -2188,10 +2407,8 @@
   };
 
   // js/ui/scenarioStorage.js
-  var STORAGE_PREFIX = "pit:scenario:";
   var CONTROL_SELECTOR = "input, select, textarea";
-  var SCHEMA_VERSION = 1;
-  var createStorageKey = (toolId) => `${STORAGE_PREFIX}${toolId}`;
+  var SCHEMA_VERSION = 2;
   var controlKeyFor = (control) => {
     if (!control) {
       return "";
@@ -2279,6 +2496,7 @@
     }
     return {
       tool: typeof data.tool === "string" ? data.tool : "",
+      datasetId: typeof data.datasetId === "string" ? data.datasetId : "",
       values
     };
   };
@@ -2294,10 +2512,15 @@
       }, delayMs);
     };
   };
-  var toExportFileName = (toolId) => {
+  var toSlug = (value) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  var toExportFileName = (toolId, datasetId = "") => {
     const now = /* @__PURE__ */ new Date();
     const pad = (value) => String(value).padStart(2, "0");
     const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const datasetSegment = toSlug(datasetId);
+    if (datasetSegment) {
+      return `${toolId}-${datasetSegment}-scenario-${stamp}.json`;
+    }
     return `${toolId}-scenario-${stamp}.json`;
   };
   var downloadJson = (fileName, payload) => {
@@ -2314,11 +2537,12 @@
   var wireScenarioControls = (container) => {
     const toolId = container.dataset.scenarioTool || "";
     const formId = container.dataset.scenarioForm || "";
+    const datasetInputId = container.dataset.scenarioDatasetInput || "";
     const form = formId ? document.getElementById(formId) : null;
+    const datasetInput = datasetInputId ? document.getElementById(datasetInputId) : null;
     if (!toolId || !form) {
       return;
     }
-    const storageKey = createStorageKey(toolId);
     const statusElement = container.querySelector("[data-scenario-status]");
     const saveButton = container.querySelector("[data-scenario-action='save']");
     const loadButton = container.querySelector("[data-scenario-action='load']");
@@ -2329,6 +2553,33 @@
     const defaultValues = collectFormSnapshot(form);
     let statusTimerId = null;
     let isApplyingSnapshot = false;
+    let activeDatasetId = datasetInput && datasetInput.value ? datasetInput.value : "";
+    const getDatasetLabel = (datasetId = "") => {
+      if (!datasetInput) {
+        return "";
+      }
+      const matchedOption = Array.from(datasetInput.options).find((option) => option.value === datasetId);
+      return matchedOption ? String(matchedOption.textContent ?? "").trim() : datasetId;
+    };
+    const datasetSuffix = (datasetId = "") => {
+      const label = getDatasetLabel(datasetId);
+      if (!label) {
+        return "";
+      }
+      return ` (${label})`;
+    };
+    const emitScenarioUpdate = (action, datasetId = activeDatasetId) => {
+      window.dispatchEvent(
+        new window.CustomEvent("pit:scenario-updated", {
+          detail: {
+            toolId,
+            action,
+            datasetId
+          }
+        })
+      );
+    };
+    const getStorageKey = (datasetId = activeDatasetId) => createScenarioStorageKey(toolId, datasetId);
     const setStatus = (message, tone = "") => {
       if (!statusElement) {
         return;
@@ -2353,17 +2604,19 @@
         }, 4200);
       }
     };
-    const saveToStorage = (showStatus = false) => {
+    const saveToStorage = (showStatus = false, datasetId = activeDatasetId) => {
       try {
         const payload = {
           version: SCHEMA_VERSION,
           tool: toolId,
+          datasetId,
           savedAt: (/* @__PURE__ */ new Date()).toISOString(),
           values: collectFormSnapshot(form)
         };
-        window.localStorage.setItem(storageKey, JSON.stringify(payload));
+        window.localStorage.setItem(getStorageKey(datasetId), JSON.stringify(payload));
+        emitScenarioUpdate("save", datasetId);
         if (showStatus) {
-          setStatus("Inputs saved in this browser.", "success");
+          setStatus(`Inputs saved in this browser${datasetSuffix(datasetId)}.`, "success");
         }
       } catch {
         if (showStatus) {
@@ -2371,12 +2624,14 @@
         }
       }
     };
-    const loadFromStorage = (showStatus = true) => {
+    const loadFromStorage = (showStatus = true, datasetId = activeDatasetId) => {
       try {
-        const raw = window.localStorage.getItem(storageKey);
+        const datasetKey = getStorageKey(datasetId);
+        const legacyKey = createScenarioStorageKey(toolId);
+        const raw = window.localStorage.getItem(datasetKey) || window.localStorage.getItem(legacyKey);
         if (!raw) {
           if (showStatus) {
-            setStatus("No saved inputs found yet.", "error");
+            setStatus(`No saved inputs found${datasetSuffix(datasetId)}.`, "error");
           }
           return false;
         }
@@ -2384,8 +2639,9 @@
         isApplyingSnapshot = true;
         applyFormSnapshot(form, parsed.values);
         isApplyingSnapshot = false;
+        emitScenarioUpdate("load", datasetId);
         if (showStatus) {
-          setStatus("Saved inputs loaded.", "success");
+          setStatus(`Saved inputs loaded${datasetSuffix(datasetId)}.`, "success");
         }
         return true;
       } catch {
@@ -2401,21 +2657,23 @@
       applyFormSnapshot(form, defaultValues);
       isApplyingSnapshot = false;
       try {
-        window.localStorage.removeItem(storageKey);
+        window.localStorage.removeItem(getStorageKey(activeDatasetId));
       } catch {
       }
-      setStatus("Inputs reset to defaults.", "success");
+      emitScenarioUpdate("reset", activeDatasetId);
+      setStatus(`Inputs reset to defaults${datasetSuffix(activeDatasetId)}.`, "success");
     };
     const exportSnapshot = () => {
       try {
         const payload = {
           version: SCHEMA_VERSION,
           tool: toolId,
+          datasetId: activeDatasetId,
           exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
           values: collectFormSnapshot(form)
         };
-        downloadJson(toExportFileName(toolId), payload);
-        setStatus("Scenario exported as JSON.", "success");
+        downloadJson(toExportFileName(toolId, activeDatasetId), payload);
+        setStatus(`Scenario exported as JSON${datasetSuffix(activeDatasetId)}.`, "success");
       } catch {
         setStatus("Could not export scenario.", "error");
       }
@@ -2434,8 +2692,9 @@
         isApplyingSnapshot = true;
         applyFormSnapshot(form, payload.values);
         isApplyingSnapshot = false;
-        saveToStorage(false);
-        setStatus("Scenario imported and applied.", "success");
+        saveToStorage(false, activeDatasetId);
+        emitScenarioUpdate("import", activeDatasetId);
+        setStatus(`Scenario imported${datasetSuffix(activeDatasetId)}.`, "success");
       } catch {
         isApplyingSnapshot = false;
         setStatus("Invalid JSON file.", "error");
@@ -2445,7 +2704,7 @@
       if (isApplyingSnapshot) {
         return;
       }
-      saveToStorage(false);
+      saveToStorage(false, activeDatasetId);
     }, 260);
     const onAutosaveEvent = () => {
       if (isApplyingSnapshot) {
@@ -2457,12 +2716,12 @@
     form.addEventListener("change", onAutosaveEvent);
     if (saveButton) {
       saveButton.addEventListener("click", () => {
-        saveToStorage(true);
+        saveToStorage(true, activeDatasetId);
       });
     }
     if (loadButton) {
       loadButton.addEventListener("click", () => {
-        loadFromStorage(true);
+        loadFromStorage(true, activeDatasetId);
       });
     }
     if (resetButton) {
@@ -2487,7 +2746,25 @@
         importFileInput.value = "";
       });
     }
-    loadFromStorage(false);
+    if (datasetInput) {
+      datasetInput.addEventListener("change", () => {
+        const previousDatasetId = activeDatasetId;
+        saveToStorage(false, previousDatasetId);
+        activeDatasetId = datasetInput.value;
+        const loaded = loadFromStorage(false, activeDatasetId);
+        if (!loaded) {
+          isApplyingSnapshot = true;
+          applyFormSnapshot(form, defaultValues);
+          isApplyingSnapshot = false;
+        }
+        setStatus(
+          loaded ? `Switched to ${getDatasetLabel(activeDatasetId)}. Saved inputs loaded.` : `Switched to ${getDatasetLabel(activeDatasetId)}. Using default inputs.`,
+          "success"
+        );
+        emitScenarioUpdate("dataset-change", activeDatasetId);
+      });
+    }
+    loadFromStorage(false, activeDatasetId);
   };
   var initScenarioStorage = () => {
     const containers = Array.from(document.querySelectorAll("[data-scenario-controls]"));

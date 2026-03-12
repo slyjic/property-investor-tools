@@ -32,6 +32,7 @@ const run = async () => {
 
     await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
     add("net-tab-visible", true);
+    add("net-dataset-visible", await page.locator("#netDatasetYear").isVisible());
 
     const portfolioPdfButtonVisible = await page.locator("#downloadPortfolioSummaryPdf").isVisible();
     add("portfolio-pdf-button-visible", portfolioPdfButtonVisible);
@@ -63,6 +64,7 @@ const run = async () => {
       .catch(() => {});
     const perfVisible = await page.locator("#investment-income-calculator").isVisible();
     add("performance-tab-opens", perfVisible);
+    add("performance-dataset-visible", await page.locator("#incomeDatasetYear").isVisible());
 
     const beforePerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
     await page.fill("#incomeOwnershipPercent", "25");
@@ -74,6 +76,7 @@ const run = async () => {
     await page.click("#tab-simple-fund");
     const fundVisible = await page.locator("#simple-fund-calculator").isVisible();
     add("fund-tab-opens", fundVisible);
+    add("fund-dataset-visible", await page.locator("#fundDatasetYear").isVisible());
 
     const beforeFund = parseMoney(await page.locator("#fundAnnualDistribution").textContent());
     await page.click("#fundInvestmentAmount");

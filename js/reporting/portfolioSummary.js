@@ -18,37 +18,68 @@ const readCheckboxValue = (id) => {
   return Boolean(element && element.checked);
 };
 
-export const buildPortfolioSummaryPayload = () => ({
-  generatedAt: new Date(),
-  netProceeds: {
-    ownershipPercent: parseNumberText(readInputValue("ownershipPercent")),
-    taxYear: readInputValue("taxYear"),
-    cgtDiscountApplied: readCheckboxValue("cgtDiscount"),
-    netSettlementCash: parseNumberText(readText("netProceeds")),
-    saleShare: parseNumberText(readText("saleShare")),
-    sellingCostsShare: parseNumberText(readText("totalSellingCosts")),
-    estimatedCgt: parseNumberText(readText("estimatedCgt")),
-    mortgagePayout: parseNumberText(readText("mortgageShare")),
-    afterTaxProfit: parseNumberText(readText("afterTaxProfit")),
-  },
-  performance: {
-    healthStatus: readText("incomeHealthStatus") || "-",
-    healthNote: readText("incomeHealthNote") || "-",
+const readDatasetOptions = () => {
+  const datasetSelector = document.getElementById("incomeDatasetYear");
+  if (!datasetSelector) {
+    return [];
+  }
+
+  return Array.from(datasetSelector.options)
+    .slice(0, 5)
+    .map((option) => ({
+      id: option.value,
+      label: String(option.textContent ?? option.value).trim(),
+    }));
+};
+
+export const buildPortfolioSummaryPayload = () => {
+  const currentPerformanceMetrics = {
     netOperatingCashflowShare: parseNumberText(readText("incomeKpiNetShare")),
     netYieldPercent: parseNumberText(readText("incomeKpiNetYield")),
     netMarginPercent: parseNumberText(readText("incomeKpiNetMargin")),
-    costRatioPercent: parseNumberText(readText("incomeKpiCostToIncome")),
-    positiveMonths: readText("incomeKpiPositiveMonths") || "-",
-    retainedCash: parseNumberText(readText("incomeKpiRetainedCash")),
-  },
-  fund: {
-    annualDistribution: parseNumberText(readText("fundAnnualDistribution")),
-    monthlyDistribution: parseNumberText(readText("fundMonthlyDistribution")),
-    annualRatePercent: parseNumberText(readText("fundAnnualRate")),
-    cashRatePercent: parseNumberText(readText("fundCashRate")),
-    capitalPreserved: parseNumberText(readText("fundCapitalPreserved")),
-  },
-});
+  };
+
+  const currentDatasetId = readInputValue("incomeDatasetYear");
+  const performanceHistoryRows = collectPerformanceHistoryRows({
+    datasetOptions: readDatasetOptions(),
+    currentDatasetId,
+    currentMetrics: currentPerformanceMetrics,
+    maxRows: 5,
+  });
+
+  return {
+    generatedAt: new Date(),
+    netProceeds: {
+      ownershipPercent: parseNumberText(readInputValue("ownershipPercent")),
+      taxYear: readInputValue("taxYear"),
+      cgtDiscountApplied: readCheckboxValue("cgtDiscount"),
+      netSettlementCash: parseNumberText(readText("netProceeds")),
+      saleShare: parseNumberText(readText("saleShare")),
+      sellingCostsShare: parseNumberText(readText("totalSellingCosts")),
+      estimatedCgt: parseNumberText(readText("estimatedCgt")),
+      mortgagePayout: parseNumberText(readText("mortgageShare")),
+      afterTaxProfit: parseNumberText(readText("afterTaxProfit")),
+    },
+    performance: {
+      healthStatus: readText("incomeHealthStatus") || "-",
+      healthNote: readText("incomeHealthNote") || "-",
+      netOperatingCashflowShare: currentPerformanceMetrics.netOperatingCashflowShare,
+      netYieldPercent: currentPerformanceMetrics.netYieldPercent,
+      netMarginPercent: currentPerformanceMetrics.netMarginPercent,
+      costRatioPercent: parseNumberText(readText("incomeKpiCostToIncome")),
+      positiveMonths: readText("incomeKpiPositiveMonths") || "-",
+      retainedCash: parseNumberText(readText("incomeKpiRetainedCash")),
+    },
+    performanceHistoryRows,
+    fund: {
+      annualDistribution: parseNumberText(readText("fundAnnualDistribution")),
+      monthlyDistribution: parseNumberText(readText("fundMonthlyDistribution")),
+      annualRatePercent: parseNumberText(readText("fundAnnualRate")),
+      cashRatePercent: parseNumberText(readText("fundCashRate")),
+      capitalPreserved: parseNumberText(readText("fundCapitalPreserved")),
+    },
+  };
+};
 
 export const generatePortfolioSummaryPdfReport = ({ payload, formatMoney, formatPercent, setPdfStatus }) => {
   const jsPdfConstructor = window.jspdf && window.jspdf.jsPDF;
@@ -278,6 +309,16 @@ export const generatePortfolioSummaryPdfReport = ({ payload, formatMoney, format
       { label: "Capital available (withdrawable)", value: formatMoney(payload.fund.capitalPreserved) },
     ]);
 
+    if (Array.isArray(payload.performanceHistoryRows) && payload.performanceHistoryRows.length >= 2) {
+      drawSection("4. Multi-Year Trend Snapshot");
+      drawRows(
+        payload.performanceHistoryRows.map((row) => ({
+          label: row.label,
+          value: `${formatMoney(row.netOperatingCashflowShare)} | Margin ${formatPercent(row.netMarginPercent)} | Yield ${formatPercent(row.netYieldPercent)}`,
+        })),
+      );
+    }
+
     ensureSpace(28);
     doc.setFont("helvetica", "italic");
     doc.setFontSize(8.5);
@@ -313,3 +354,4 @@ export const generatePortfolioSummaryPdfReport = ({ payload, formatMoney, format
     setPdfStatus("Could not create summary PDF. Please try again.", "error");
   }
 };
+import { collectPerformanceHistoryRows } from "../shared/performanceHistory.js";

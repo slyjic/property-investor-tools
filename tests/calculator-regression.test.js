@@ -395,7 +395,7 @@ describe("scenario persistence", () => {
     setCheckbox("cgtDiscount", false);
 
     scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    const stored = window.localStorage.getItem("pit:scenario:net-proceeds");
+    const stored = window.localStorage.getItem("pit:scenario:net-proceeds:fy-2025-26");
     expect(stored).toBeTruthy();
 
     setInput("salePrice", "800000");
@@ -411,14 +411,31 @@ describe("scenario persistence", () => {
     expect(byId("cgtDiscount").checked).toBe(false);
   });
 
+  it("keeps separate net proceeds scenarios by dataset year", () => {
+    setInput("salePrice", "1000000");
+    scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    setSelect("netDatasetYear", "fy-2026-27");
+    setInput("salePrice", "2000000");
+    scenarioButton("net-proceeds", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2025-26")).toBeTruthy();
+    expect(window.localStorage.getItem("pit:scenario:net-proceeds:fy-2026-27")).toBeTruthy();
+
+    setSelect("netDatasetYear", "fy-2025-26");
+    expect(moneyInput("salePrice")).toBeCloseTo(1000000, 2);
+    setSelect("netDatasetYear", "fy-2026-27");
+    expect(moneyInput("salePrice")).toBeCloseTo(2000000, 2);
+  });
+
   it("resets fund inputs to defaults and clears saved state", () => {
     setInput("fundInvestmentAmount", "500000");
     scenarioButton("simple-fund", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(window.localStorage.getItem("pit:scenario:simple-fund")).toBeTruthy();
+    expect(window.localStorage.getItem("pit:scenario:simple-fund:fy-2025-26")).toBeTruthy();
 
     scenarioButton("simple-fund", "reset").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
 
-    expect(window.localStorage.getItem("pit:scenario:simple-fund")).toBeNull();
+    expect(window.localStorage.getItem("pit:scenario:simple-fund:fy-2025-26")).toBeNull();
     expect(moneyInput("fundInvestmentAmount")).toBeCloseTo(100000, 2);
     expect(moneyOutput("fundAnnualDistribution")).toBeCloseTo(7850, 2);
   });
@@ -449,5 +466,6 @@ describe("scenario persistence", () => {
     expect(Number.parseFloat(byId("incomeOwnershipPercent").value)).toBeCloseTo(25, 2);
     expect(moneyInput("incomePropertyValue")).toBeCloseTo(2000000, 2);
     expect(moneyOutput("incomeKpiNetShare")).toBeCloseTo(51572.2, 2);
+    expect(window.localStorage.getItem("pit:scenario:performance:fy-2024-25")).toBeTruthy();
   });
 });

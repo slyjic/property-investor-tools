@@ -1,5 +1,6 @@
 import { DEFAULT_CATEGORY_VALUES, DEFAULT_STATEMENT_MONTHS } from "../config/constants.js";
 import { computePerformance } from "../calculations/performance.js";
+import { collectPerformanceHistoryRows } from "../shared/performanceHistory.js";
 import {
   byId,
   clampPercentInput,
@@ -108,10 +109,15 @@ export const initPerformanceCalculator = () => {
     trendNetCard: byId("incomeNetTrendCard"),
     trendMarginCard: byId("incomeMarginTrendCard"),
     outputMobileSummaryNet: byId("mobileIncomeNet"),
+    datasetSelector: byId("incomeDatasetYear"),
+    historyTableWrap: byId("incomeHistoryTableWrap"),
+    historyRowsBody: byId("incomeHistoryRows"),
+    historyEmpty: byId("incomeHistoryEmpty"),
   };
 
   const monthValueKeys = ["income", "expenses", "fees", "disbursement"];
   let monthRows = [];
+  let latestHistoryMetrics = null;
 
   const setLabelledMoneyOutput = (element, label, value, useSignClass = false) => {
     if (!element) {
@@ -262,6 +268,87 @@ export const initPerformanceCalculator = () => {
     if (node) {
       node.textContent = "";
     }
+  };
+
+  const getDatasetOptions = () => {
+    const selector = incomeFields.datasetSelector;
+    if (!selector) {
+      return [];
+    }
+
+    return Array.from(selector.options)
+      .slice(0, 5)
+      .map((option) => ({
+        id: option.value,
+        label: String(option.textContent ?? option.value).trim(),
+      }));
+  };
+
+  const applyTrendValueClass = (cell, value) => {
+    if (!cell) {
+      return;
+    }
+    cell.classList.remove("value-positive", "value-negative");
+    if (value > 0) {
+      cell.classList.add("value-positive");
+      return;
+    }
+    if (value < 0) {
+      cell.classList.add("value-negative");
+    }
+  };
+
+  const renderMultiYearTrend = () => {
+    if (!incomeFields.historyRowsBody || !incomeFields.historyTableWrap || !incomeFields.historyEmpty) {
+      return;
+    }
+
+    const currentDatasetId = incomeFields.datasetSelector ? incomeFields.datasetSelector.value : "";
+    const historyRows = collectPerformanceHistoryRows({
+      datasetOptions: getDatasetOptions(),
+      currentDatasetId,
+      currentMetrics: latestHistoryMetrics,
+      maxRows: 5,
+    });
+
+    clearNodeChildren(incomeFields.historyRowsBody);
+
+    if (historyRows.length < 2) {
+      incomeFields.historyTableWrap.hidden = true;
+      setTextContent(
+        incomeFields.historyEmpty,
+        "Save at least two year datasets to compare long-term net, margin, and yield.",
+      );
+      return;
+    }
+
+    historyRows.forEach((row) => {
+      const tableRow = document.createElement("tr");
+
+      const labelCell = document.createElement("td");
+      labelCell.textContent = row.label;
+      tableRow.appendChild(labelCell);
+
+      const netCell = document.createElement("td");
+      netCell.textContent = formatMoney(row.netOperatingCashflowShare);
+      applyTrendValueClass(netCell, row.netOperatingCashflowShare);
+      tableRow.appendChild(netCell);
+
+      const marginCell = document.createElement("td");
+      marginCell.textContent = `${row.netMarginPercent.toFixed(2)}%`;
+      applyTrendValueClass(marginCell, row.netMarginPercent);
+      tableRow.appendChild(marginCell);
+
+      const yieldCell = document.createElement("td");
+      yieldCell.textContent = `${row.netYieldPercent.toFixed(2)}%`;
+      applyTrendValueClass(yieldCell, row.netYieldPercent);
+      tableRow.appendChild(yieldCell);
+
+      incomeFields.historyRowsBody.appendChild(tableRow);
+    });
+
+    incomeFields.historyTableWrap.hidden = false;
+    setTextContent(incomeFields.historyEmpty, `Comparing ${historyRows.length} year datasets.`);
   };
 
   const createMonthInput = ({ index, field, value, monthLabel, fieldLabel, mobile = false }) => {
@@ -649,6 +736,13 @@ export const initPerformanceCalculator = () => {
     setTrendToneClass(incomeFields.trendMarginCard, performance.latestMargin);
 
     setHealthState(performance.health.status, performance.health.note, performance.health.tone);
+
+    latestHistoryMetrics = {
+      netOperatingCashflowShare: performance.yourShareNet,
+      netMarginPercent: performance.annualMargin,
+      netYieldPercent: performance.netYield,
+    };
+    renderMultiYearTrend();
   };
 
   const wireIncomeCurrencyFormatting = () => {
@@ -752,6 +846,14 @@ export const initPerformanceCalculator = () => {
       calculateInvestmentIncome();
     });
   }
+
+  window.addEventListener("pit:scenario-updated", (event) => {
+    const detail = event.detail || {};
+    if (detail.toolId !== "performance") {
+      return;
+    }
+    renderMultiYearTrend();
+  });
 
   applyCategoryDefaults();
   wireIncomeCurrencyFormatting();

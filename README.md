@@ -10,17 +10,21 @@ Includes a global portfolio summary PDF export from the page header.
   - Sale proceeds after selling costs, CGT estimate, and mortgage payout
   - Ownership share support
   - Tax year switching (2025-26, 2026-27, 2027-28)
-  - Scenario actions: save/load/reset, JSON import/export
+  - Year datasets (FY 2024-25 to FY 2028-29) with scenario save/load/reset
+  - JSON import/export for backups and sharing
   - PDF report export
 - Performance Calculator
   - Annual category totals and monthly cashflow tracking
   - Net annual/monthly outcomes, margin, and yield views
-  - Scenario actions: save/load/reset, JSON import/export
+  - Year dataset selector and compact multi-year trend summary (net, margin, yield)
+  - Scenario actions: save/load/reset with per-year local storage
+  - JSON import/export for backups and sharing
   - Quick monthly entry actions and quarterly rollups
 - Simple Investment Fund Calculator
   - Monthly income projection from a capital-stable model
   - 4.00% + RBA cash rate return assumption
-  - Scenario actions: save/load/reset, JSON import/export
+  - Year datasets (FY 2024-25 to FY 2028-29) with scenario save/load/reset
+  - JSON import/export for backups and sharing
   - 12-month distribution schedule and summary
 
 ## Files
