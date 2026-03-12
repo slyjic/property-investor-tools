@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { chromium } from "playwright";
@@ -139,6 +139,7 @@ const run = async () => {
 
   const reportPath = path.resolve(root, "reports/a11y-report.json");
   const summaryPath = path.resolve(root, "reports/a11y-summary.txt");
+  const reportsDir = path.dirname(reportPath);
   const jsonText = JSON.stringify(report, null, 2);
 
   const lines = [
@@ -157,6 +158,7 @@ const run = async () => {
     }
   }
 
+  await mkdir(reportsDir, { recursive: true });
   await Promise.all([writeFile(reportPath, jsonText), writeFile(summaryPath, `${lines.join("\n")}\n`)]);
 
   console.log(lines.join("\n"));
