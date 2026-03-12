@@ -468,4 +468,40 @@ describe("scenario persistence", () => {
     expect(moneyOutput("incomeKpiNetShare")).toBeCloseTo(51572.2, 2);
     expect(window.localStorage.getItem("pit:scenario:performance:fy-2024-25")).toBeTruthy();
   });
+
+  it("restores last used dataset year on reload", async () => {
+    setSelect("fundDatasetYear", "fy-2027-28");
+    scenarioButton("simple-fund", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    await loadApp();
+    expect(byId("fundDatasetYear").value).toBe("fy-2027-28");
+  });
+
+  it("shows unsaved-change hint when switching dataset year", () => {
+    setInput("salePrice", "1111111");
+    setSelect("netDatasetYear", "fy-2026-27");
+
+    const status = document.querySelector("[data-scenario-tool='net-proceeds'] [data-scenario-status]");
+    if (!status) {
+      throw new Error("Missing net proceeds scenario status");
+    }
+
+    expect(String(status.textContent ?? "")).toContain("Unsaved edits were auto-saved before switching");
+  });
+
+  it("renders multi-year trend panel when two performance datasets are saved", () => {
+    scenarioButton("performance", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    setSelect("incomeDatasetYear", "fy-2025-26");
+    setInput("incomeOwnershipPercent", "50");
+    scenarioButton("performance", "save").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    const tableWrap = byId("incomeHistoryTableWrap");
+    const rows = Array.from(document.querySelectorAll("#incomeHistoryRows tr"));
+    const sparklineCard = byId("incomeHistoryTrendCard");
+
+    expect(tableWrap.hidden).toBe(false);
+    expect(rows.length).toBeGreaterThanOrEqual(2);
+    expect(sparklineCard.hidden).toBe(false);
+  });
 });

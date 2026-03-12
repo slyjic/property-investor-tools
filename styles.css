@@ -216,6 +216,21 @@ h1 {
   font-size: 0.8rem;
 }
 
+.dataset-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(105, 212, 159, 0.5);
+  border-radius: 999px;
+  padding: 0.2rem 0.52rem;
+  background: rgba(8, 36, 29, 0.6);
+  color: rgba(214, 246, 232, 0.96);
+  font-family: var(--font-display);
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+}
+
 .scenario-actions-row {
   display: grid;
   gap: 0.4rem;
@@ -1367,6 +1382,10 @@ select:focus {
   color: var(--bad);
 }
 
+.history-sparkline-card {
+  margin-top: 0.48rem;
+}
+
 .results-details {
   margin-top: 0.62rem;
   border: 1px solid rgba(188, 218, 223, 0.2);
@@ -2355,6 +2374,10 @@ form[id] {
   .scenario-dataset select {
     width: 100%;
     min-width: 0;
+  }
+
+  .dataset-badge {
+    justify-self: start;
   }
 
   .button-primary {
