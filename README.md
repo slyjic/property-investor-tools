@@ -48,6 +48,7 @@ Quality checks:
 npm run lint
 npm run format:check
 npm test
+npm run audit:a11y
 ```
 
 Auto-format supported files:

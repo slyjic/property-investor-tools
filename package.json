@@ -8,6 +8,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build:bundle": "esbuild app.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app.bundle.js",
+    "audit:a11y": "node scripts/a11y-audit.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -23,10 +24,12 @@
   },
   "homepage": "https://github.com/slyjic/property-investor-tools#readme",
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "esbuild": "^0.27.3",
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
     "jsdom": "^28.1.0",
+    "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"
   }

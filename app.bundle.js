@@ -1400,13 +1400,14 @@
         node.textContent = "";
       }
     };
-    const createMonthInput = ({ index, field, value, mobile = false }) => {
+    const createMonthInput = ({ index, field, value, monthLabel, fieldLabel, mobile = false }) => {
       const input = document.createElement("input");
       input.type = "text";
       input.inputMode = "decimal";
       input.dataset.currency = "true";
       input.autocomplete = "off";
       input.value = toEditableNumberString(value);
+      input.setAttribute("aria-label", `${monthLabel} - ${fieldLabel}`);
       input.dataset.monthIndex = String(index);
       if (mobile) {
         input.dataset.monthFieldMobile = field;
@@ -1422,15 +1423,15 @@
       monthCell.textContent = month.label;
       row.appendChild(monthCell);
       const monthFieldConfig = [
-        { key: "income", value: month.income },
-        { key: "expenses", value: month.expenses },
-        { key: "fees", value: month.fees },
-        { key: "disbursement", value: month.disbursement }
+        { key: "income", label: "Gross income", value: month.income },
+        { key: "expenses", label: "Operating expenses", value: month.expenses },
+        { key: "fees", label: "Management fees", value: month.fees },
+        { key: "disbursement", label: "Owner draw / disbursement", value: month.disbursement }
       ];
       const inputs = {};
-      monthFieldConfig.forEach(({ key, value }) => {
+      monthFieldConfig.forEach(({ key, label, value }) => {
         const cell = document.createElement("td");
-        const input = createMonthInput({ index, field: key, value });
+        const input = createMonthInput({ index, field: key, value, monthLabel: month.label, fieldLabel: label });
         cell.appendChild(input);
         row.appendChild(cell);
         inputs[key] = input;
@@ -1510,7 +1511,14 @@
         const labelText = document.createElement("span");
         labelText.textContent = label;
         fieldLabel.appendChild(labelText);
-        const input = createMonthInput({ index, field: key, value, mobile: true });
+        const input = createMonthInput({
+          index,
+          field: key,
+          value,
+          monthLabel: month.label,
+          fieldLabel: label,
+          mobile: true
+        });
         fieldLabel.appendChild(input);
         grid.appendChild(fieldLabel);
         inputs[key] = input;
@@ -1910,6 +1918,7 @@
         const isActive = tab.dataset.toolTab === panelId;
         tab.classList.toggle("is-active", isActive);
         tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        tab.tabIndex = isActive ? 0 : -1;
       });
       panels.forEach((panel) => {
         const isActive = panel.id === panelId;
@@ -1924,6 +1933,32 @@
           return;
         }
         activatePanel(targetPanel);
+      });
+      tab.addEventListener("keydown", (event) => {
+        const currentIndex = tabs.indexOf(tab);
+        if (currentIndex === -1) {
+          return;
+        }
+        let nextIndex = currentIndex;
+        if (event.key === "ArrowRight") {
+          nextIndex = (currentIndex + 1) % tabs.length;
+        } else if (event.key === "ArrowLeft") {
+          nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        } else if (event.key === "Home") {
+          nextIndex = 0;
+        } else if (event.key === "End") {
+          nextIndex = tabs.length - 1;
+        } else {
+          return;
+        }
+        event.preventDefault();
+        const nextTab = tabs[nextIndex];
+        const targetPanel = nextTab.dataset.toolTab;
+        if (!targetPanel) {
+          return;
+        }
+        activatePanel(targetPanel);
+        nextTab.focus();
       });
     });
     const defaultTab = tabs.find((tab) => tab.classList.contains("is-active")) || tabs[0];

@@ -11,6 +11,7 @@ export const initToolMenu = () => {
       const isActive = tab.dataset.toolTab === panelId;
       tab.classList.toggle("is-active", isActive);
       tab.setAttribute("aria-selected", isActive ? "true" : "false");
+      tab.tabIndex = isActive ? 0 : -1;
     });
 
     panels.forEach((panel) => {
@@ -27,6 +28,36 @@ export const initToolMenu = () => {
         return;
       }
       activatePanel(targetPanel);
+    });
+
+    tab.addEventListener("keydown", (event) => {
+      const currentIndex = tabs.indexOf(tab);
+      if (currentIndex === -1) {
+        return;
+      }
+
+      let nextIndex = currentIndex;
+      if (event.key === "ArrowRight") {
+        nextIndex = (currentIndex + 1) % tabs.length;
+      } else if (event.key === "ArrowLeft") {
+        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = tabs.length - 1;
+      } else {
+        return;
+      }
+
+      event.preventDefault();
+      const nextTab = tabs[nextIndex];
+      const targetPanel = nextTab.dataset.toolTab;
+      if (!targetPanel) {
+        return;
+      }
+
+      activatePanel(targetPanel);
+      nextTab.focus();
     });
   });
 

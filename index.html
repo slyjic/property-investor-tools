@@ -25,11 +25,12 @@
           </p>
         </header>
 
-        <nav class="tool-menu" aria-label="Calculator menu">
+        <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
           <button
             class="tool-tab is-active"
             id="tab-net-proceeds"
             type="button"
+            role="tab"
             data-tool-tab="tool-net-proceeds"
             aria-controls="tool-net-proceeds"
             aria-selected="true"
@@ -40,6 +41,7 @@
             class="tool-tab"
             id="tab-investment-income"
             type="button"
+            role="tab"
             data-tool-tab="tool-investment-income"
             aria-controls="tool-investment-income"
             aria-selected="false"
@@ -50,6 +52,7 @@
             class="tool-tab"
             id="tab-simple-fund"
             type="button"
+            role="tab"
             data-tool-tab="tool-simple-fund"
             aria-controls="tool-simple-fund"
             aria-selected="false"
@@ -58,7 +61,13 @@
           </button>
         </nav>
 
-        <section class="tool-panel is-active" id="tool-net-proceeds" data-tool-panel aria-labelledby="tab-net-proceeds">
+        <section
+          class="tool-panel is-active"
+          id="tool-net-proceeds"
+          data-tool-panel
+          role="tabpanel"
+          aria-labelledby="tab-net-proceeds"
+        >
           <div class="tool-panel-head">
             <h2>Net Proceeds Calculator</h2>
             <p class="tool-description">Model settlement proceeds using disposal costs, ownership apportionment, and CGT impact.</p>
@@ -340,7 +349,7 @@
                     </div>
                   </div>
 
-                  <aside class="net-sell-summary">
+                  <section class="net-sell-summary" aria-label="Disposal cost snapshot">
                     <h4 class="net-subgroup-title">Disposal Cost Snapshot</h4>
                     <dl class="net-cost-list">
                       <div>
@@ -360,7 +369,7 @@
                         <dd id="totalSellingCostsInline">$0.00</dd>
                       </div>
                     </dl>
-                  </aside>
+                  </section>
                 </div>
               </section>
 
@@ -412,7 +421,7 @@
               </section>
             </form>
 
-            <aside class="panel panel-results net-results-panel results-panel-standard" id="netResultsDock">
+            <section class="panel panel-results net-results-panel results-panel-standard" id="netResultsDock">
               <h3>4. Settlement Outcomes</h3>
 
               <section class="results-hero results-hero-net" aria-label="Primary settlement outcome">
@@ -485,7 +494,7 @@
                 <button class="button-primary" id="downloadPdf" type="button">Download PDF Report</button>
                 <p class="pdf-status" id="pdfStatus" aria-live="polite"></p>
               </div>
-            </aside>
+            </section>
           </div>
         </section>
 
@@ -493,6 +502,7 @@
           class="tool-panel"
           id="tool-investment-income"
           data-tool-panel
+          role="tabpanel"
           hidden
           aria-labelledby="tab-investment-income"
         >
@@ -893,7 +903,7 @@
                   </button>
                 </div>
 
-                <div class="statement-table-wrap">
+                <div class="statement-table-wrap" tabindex="0" aria-label="Monthly statement table (scroll horizontally)">
                   <table class="statement-table">
                     <thead>
                       <tr>
@@ -953,7 +963,7 @@
                 </div>
               </section>
             </form>
-            <aside class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock">
+            <section class="panel panel-results investment-results-panel results-panel-standard" id="incomeResultsDock">
               <h3>4. Performance Outcomes</h3>
 
               <section class="results-hero results-hero-performance" aria-label="Primary performance outcome">
@@ -1165,7 +1175,7 @@
                   </details>
                 </div>
               </details>
-            </aside>
+            </section>
           </div>
         </section>
 
@@ -1173,6 +1183,7 @@
           class="tool-panel"
           id="tool-simple-fund"
           data-tool-panel
+          role="tabpanel"
           hidden
           aria-labelledby="tab-simple-fund"
         >
@@ -1221,7 +1232,7 @@
                     <p class="note fund-input-note">Income-focused model. Capital value stays fixed unless you add or withdraw capital.</p>
                   </div>
 
-                  <aside class="fund-assumption-card" aria-label="Fund mechanics">
+                  <div class="fund-assumption-card" aria-label="Fund mechanics">
                     <h4 class="net-subgroup-title">Fund Mechanics</h4>
                     <dl class="fund-assumption-list">
                       <div>
@@ -1237,7 +1248,7 @@
                         <dd>7.85%</dd>
                       </div>
                     </dl>
-                  </aside>
+                  </div>
                 </div>
 
                 <div class="fund-presets" role="group" aria-label="Quick investment amounts">
@@ -1273,7 +1284,7 @@
                   </article>
                 </div>
 
-                <div class="fund-table-wrap">
+                <div class="fund-table-wrap" tabindex="0" aria-label="Fund distribution schedule table (scroll horizontally)">
                   <table class="fund-table">
                     <thead>
                       <tr>
@@ -1295,7 +1306,7 @@
               </section>
             </form>
 
-            <aside class="panel panel-results fund-results-panel results-panel-standard" id="fundResultsDock">
+            <section class="panel panel-results fund-results-panel results-panel-standard" id="fundResultsDock">
               <h3>3. Distribution Summary</h3>
 
               <section class="results-hero results-hero-fund" aria-label="Primary fund outcome">
@@ -1380,7 +1391,7 @@
                 Default cash rate is 3.85% (RBA target cash rate, as at 11 Mar 2026). Source:
                 <a href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noreferrer">RBA Cash Rate</a>.
               </p>
-            </aside>
+            </section>
           </div>
         </section>
       </section>

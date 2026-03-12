@@ -283,13 +283,14 @@ export const initPerformanceCalculator = () => {
     }
   };
 
-  const createMonthInput = ({ index, field, value, mobile = false }) => {
+  const createMonthInput = ({ index, field, value, monthLabel, fieldLabel, mobile = false }) => {
     const input = document.createElement("input");
     input.type = "text";
     input.inputMode = "decimal";
     input.dataset.currency = "true";
     input.autocomplete = "off";
     input.value = toEditableNumberString(value);
+    input.setAttribute("aria-label", `${monthLabel} - ${fieldLabel}`);
     input.dataset.monthIndex = String(index);
     if (mobile) {
       input.dataset.monthFieldMobile = field;
@@ -308,16 +309,22 @@ export const initPerformanceCalculator = () => {
     row.appendChild(monthCell);
 
     const monthFieldConfig = [
-      { key: "income", value: month.income },
-      { key: "expenses", value: month.expenses },
-      { key: "fees", value: month.fees },
-      { key: "disbursement", value: month.disbursement },
+      { key: "income", label: "Gross income", value: month.income },
+      { key: "expenses", label: "Operating expenses", value: month.expenses },
+      { key: "fees", label: "Management fees", value: month.fees },
+      { key: "disbursement", label: "Owner draw / disbursement", value: month.disbursement },
     ];
 
     const inputs = {};
-    monthFieldConfig.forEach(({ key, value }) => {
+    monthFieldConfig.forEach(({ key, label, value }) => {
       const cell = document.createElement("td");
-      const input = createMonthInput({ index, field: key, value });
+      const input = createMonthInput({
+        index,
+        field: key,
+        value,
+        monthLabel: month.label,
+        fieldLabel: label,
+      });
       cell.appendChild(input);
       row.appendChild(cell);
       inputs[key] = input;
@@ -415,7 +422,14 @@ export const initPerformanceCalculator = () => {
       labelText.textContent = label;
       fieldLabel.appendChild(labelText);
 
-      const input = createMonthInput({ index, field: key, value, mobile: true });
+      const input = createMonthInput({
+        index,
+        field: key,
+        value,
+        monthLabel: month.label,
+        fieldLabel: label,
+        mobile: true,
+      });
       fieldLabel.appendChild(input);
       grid.appendChild(fieldLabel);
       inputs[key] = input;
