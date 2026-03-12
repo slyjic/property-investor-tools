@@ -1694,7 +1694,10 @@
       setOutputValue(incomeFields.outputMonthlyStripIncome, performance.monthlyIncomeTotal);
       setOutputValue(incomeFields.outputMonthlyStripNet, performance.monthlyNet, true);
       setOutputValue(incomeFields.outputMonthlyStripAvg, performance.monthlyAverageNet, true);
-      setTextContent(incomeFields.outputMonthlyStripPositive, `${performance.positiveMonths} / ${months.length}`);
+      setTextContent(
+        incomeFields.outputMonthlyStripPositive,
+        `${performance.positiveMonths} / ${months.length}`
+      );
       const quarterNetOutputs = [
         incomeFields.outputQuarter1Net,
         incomeFields.outputQuarter2Net,
