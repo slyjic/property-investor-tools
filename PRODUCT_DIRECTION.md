@@ -48,4 +48,3 @@ Cleanup should prioritize foundations that support the future without adding new
 
 - Technical debt backlog: `TECH_DEBT_TASKS.md`
 - Existing app files: `index.html`, `styles.css`, `app.js`
-
