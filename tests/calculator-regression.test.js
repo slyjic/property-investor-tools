@@ -4,6 +4,46 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const html = readFileSync(resolve(process.cwd(), "index.html"), "utf8");
 
+class MockPdf {
+  static lastInstance = null;
+
+  constructor() {
+    MockPdf.lastInstance = this;
+    this.pages = 1;
+    this.savedFilename = "";
+    this.internal = {
+      pageSize: {
+        getWidth: () => 595,
+        getHeight: () => 842,
+      },
+    };
+  }
+
+  setFillColor() {}
+  rect() {}
+  setTextColor() {}
+  setFont() {}
+  setFontSize() {}
+  setDrawColor() {}
+  setLineWidth() {}
+  line() {}
+  roundedRect() {}
+  setPage() {}
+  addPage() {
+    this.pages += 1;
+  }
+  splitTextToSize(value) {
+    return [String(value)];
+  }
+  getNumberOfPages() {
+    return this.pages;
+  }
+  text() {}
+  save(filename) {
+    this.savedFilename = filename;
+  }
+}
+
 const parseMoneyText = (text) => {
   const parsed = Number.parseFloat(String(text ?? "").replace(/[^0-9.-]/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -88,20 +128,94 @@ const loadApp = async () => {
   document.open();
   document.write(html);
   document.close();
-  window.jspdf = { jsPDF: class MockPdf {} };
+  window.jspdf = { jsPDF: MockPdf };
   vi.resetModules();
   await import("../app.js");
 };
 
 beforeEach(async () => {
   window.localStorage.clear();
+  window.location.hash = "";
+  MockPdf.lastInstance = null;
   await loadApp();
+});
+
+describe("tool library routing", () => {
+  it("shows the public tool library by default", () => {
+    expect(byId("toolHome").hidden).toBe(false);
+    expect(byId("toolWorkspace").hidden).toBe(true);
+    expect(textOutput("tool-library-title")).toBe("Choose a tool.");
+  });
+
+  it("opens the focused workspace when a tool card is selected", () => {
+    byId("launch-net-proceeds").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(byId("toolHome").hidden).toBe(true);
+    expect(byId("toolWorkspace").hidden).toBe(false);
+    expect(byId("tool-net-proceeds").hidden).toBe(false);
+    expect(window.location.hash).toBe("#net-proceeds");
+    expect(textOutput("workspaceToolTitle")).toBe("Net Proceeds Calculator");
+    expect(textOutput("workspaceToolMeta")).toBe("1 of 3 public calculators");
+    expect(document.title).toBe("Net Proceeds Calculator | Property Investor Tools");
+  });
+
+  it("opens a direct tool hash on load", async () => {
+    window.location.hash = "#simple-fund";
+    await loadApp();
+
+    expect(byId("toolHome").hidden).toBe(true);
+    expect(byId("toolWorkspace").hidden).toBe(false);
+    expect(byId("tool-simple-fund").hidden).toBe(false);
+    expect(textOutput("workspaceToolTitle")).toBe("Simple Investment Fund Calculator");
+    expect(document.title).toBe("Simple Investment Fund Calculator | Property Investor Tools");
+  });
+
+  it("returns to the tool library from the focused workspace header", () => {
+    byId("launch-simple-performance").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    document
+      .querySelector(".workspace-context-back")
+      ?.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(byId("toolHome").hidden).toBe(false);
+    expect(byId("toolWorkspace").hidden).toBe(true);
+    expect(window.location.hash).toBe("");
+    expect(document.title).toBe("Property Investor Tools");
+  });
+});
+
+describe("portfolio summary export modal", () => {
+  it("opens a confirmation modal before exporting", () => {
+    expect(byId("portfolioSummaryModal").hidden).toBe(true);
+
+    byId("downloadPortfolioSummaryPdf").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(byId("portfolioSummaryModal").hidden).toBe(false);
+    expect(byId("portfolioSummaryModal").getAttribute("aria-hidden")).toBe("false");
+  });
+
+  it("closes the confirmation modal when cancelled", () => {
+    byId("downloadPortfolioSummaryPdf").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    byId("portfolioSummaryModalCancel").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(byId("portfolioSummaryModal").hidden).toBe(true);
+    expect(byId("portfolioSummaryModal").getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("downloads the summary only after confirmation", () => {
+    byId("downloadPortfolioSummaryPdf").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    byId("portfolioSummaryModalConfirm").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+
+    expect(byId("portfolioSummaryModal").hidden).toBe(true);
+    expect(textOutput("portfolioPdfStatus")).toBe("Portfolio summary PDF downloaded.");
+    expect(MockPdf.lastInstance?.savedFilename).toMatch(/^portfolio-summary-\d{8}-\d{4}\.pdf$/);
+  });
 });
 
 describe("net proceeds calculator regression", () => {
   it("calculates net proceeds with percent commission mode", () => {
     setInput("salePrice", "1000000");
-    setInput("purchasePrice", "600000");
+    setInput("purchasePrice", "300000");
     setInput("ownershipPercent", "50");
     setInput("outstandingMortgage", "100000");
     setInput("marketingCost", "10000");
@@ -117,9 +231,28 @@ describe("net proceeds calculator regression", () => {
     expect(moneyOutput("netProceeds")).toBeCloseTo(349731.25, 2);
   });
 
-  it("keeps mortgage payout as personal (not ownership-scaled)", () => {
+  it("keeps individual cost base as personal (not ownership-scaled)", () => {
     setInput("salePrice", "1000000");
     setInput("purchasePrice", "600000");
+    setInput("ownershipPercent", "50");
+    setInput("outstandingMortgage", "0");
+    setInput("taxableIncome", "0");
+    setInput("agentFeePercent", "0");
+    setInput("agentFeeGstPercent", "0");
+    setInput("marketingCost", "0");
+    setInput("legalCost", "0");
+    setInput("mortgageReleaseCost", "0");
+    setInput("titleSearchCost", "0");
+    setCheckbox("cgtDiscount", false);
+
+    expect(moneyOutput("saleShare")).toBeCloseTo(500000, 2);
+    expect(moneyOutput("capitalGain")).toBeCloseTo(-100000, 2);
+    expect(moneyOutput("afterTaxProfit")).toBeCloseTo(-100000, 2);
+  });
+
+  it("keeps mortgage payout as personal (not ownership-scaled)", () => {
+    setInput("salePrice", "1000000");
+    setInput("purchasePrice", "150000");
     setInput("ownershipPercent", "25");
     setInput("outstandingMortgage", "400000");
     setInput("taxableIncome", "0");
@@ -203,9 +336,9 @@ describe("net proceeds calculator regression", () => {
     expect(moneyOutput("totalSellingCostsWholeComputed")).toBeCloseTo(25000, 2);
   });
 
-  it("calculates after-tax profit relative to purchase share", () => {
+  it("calculates after-tax profit relative to individual cost base", () => {
     setInput("salePrice", "900000");
-    setInput("purchasePrice", "600000");
+    setInput("purchasePrice", "300000");
     setInput("ownershipPercent", "50");
     setInput("outstandingMortgage", "0");
     setInput("taxableIncome", "0");
@@ -380,6 +513,13 @@ Aug 2024,2000,300,100,1200`;
 });
 
 describe("simple performance calculator regression", () => {
+  it("shows formatted currency defaults on first render", () => {
+    expect(byId("simplePerfPropertyValue").value).toBe("$1,100,000");
+    expect(byId("simplePerfAnnualIncome").value).toBe("$267,305.94");
+    expect(byId("simplePerfAnnualExpenses").value).toBe("$47,532.22");
+    expect(byId("simplePerfAnnualFees").value).toBe("$13,484.94");
+  });
+
   it("loads default annual snapshot metrics", () => {
     expect(moneyOutput("simplePerfAnnualNet")).toBeCloseTo(206288.78, 2);
     expect(moneyOutput("simplePerfNetShare")).toBeCloseTo(206288.78, 2);
@@ -395,6 +535,10 @@ describe("simple performance calculator regression", () => {
 });
 
 describe("simple fund calculator regression", () => {
+  it("shows a formatted default investment amount on first render", () => {
+    expect(byId("fundInvestmentAmount").value).toBe("$100,000");
+  });
+
   it("uses default investment amount to produce monthly and annual distribution", () => {
     expect(moneyOutput("fundMonthlyDistribution")).toBeCloseTo(654.17, 2);
     expect(moneyOutput("fundAnnualDistribution")).toBeCloseTo(7850, 2);
@@ -517,6 +661,7 @@ describe("scenario persistence", () => {
 
     await loadApp();
     expect(moneyInput("salePrice")).toBeCloseTo(3456789, 2);
+    expect(byId("salePrice").value).toBe("$3,456,789");
   });
 
   it("renders multi-year trend panel when two performance datasets are saved", () => {

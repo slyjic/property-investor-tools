@@ -30,16 +30,74 @@ const run = async () => {
     const resp = await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 45000 });
     add("page-load", !!resp && resp.ok(), `status=${resp ? resp.status() : "none"}`);
 
-    await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
-    add("net-tab-visible", true);
+    await page.waitForSelector("#launch-net-proceeds", { timeout: 15000 });
+    add("tool-library-visible", await page.locator("#toolHome").isVisible());
+    add("tool-workspace-hidden-by-default", !(await page.locator("#toolWorkspace").isVisible()));
+    add("advanced-tool-card-removed", (await page.locator(".tool-card-disabled").count()) === 0);
+
+    add("site-nav-menu-visible", await page.locator(".site-nav-menu-trigger").isVisible());
+    add("portfolio-pdf-button-visible", await page.locator("#downloadPortfolioSummaryPdf").isVisible());
+
+    await page.click("#downloadPortfolioSummaryPdf");
+    await page.waitForSelector("#portfolioSummaryModal:not([hidden])", { timeout: 15000 });
+    add("portfolio-summary-modal-opens", await page.locator("#portfolioSummaryModal").isVisible());
+    await page.click("#portfolioSummaryModalCancel");
+    await page.waitForTimeout(100);
+    add("portfolio-summary-modal-cancels", !(await page.locator("#portfolioSummaryModal").isVisible()));
+
+    await page.click("#downloadPortfolioSummaryPdf");
+    await page.waitForSelector("#portfolioSummaryModal:not([hidden])", { timeout: 15000 });
+    await page.waitForFunction(() => Boolean(window.jspdf && window.jspdf.jsPDF), { timeout: 15000 });
+    const portfolioSummaryDownloadPromise = page.waitForEvent("download", { timeout: 15000 });
+    await page.click("#portfolioSummaryModalConfirm");
+    const portfolioSummaryDownload = await portfolioSummaryDownloadPromise;
+    add(
+      "portfolio-summary-download-starts",
+      /^portfolio-summary-\d{8}-\d{4}\.pdf$/.test(portfolioSummaryDownload.suggestedFilename()),
+      portfolioSummaryDownload.suggestedFilename(),
+    );
+    add("portfolio-summary-modal-confirms", !(await page.locator("#portfolioSummaryModal").isVisible()));
+
+    await page.click(".site-nav-menu-trigger");
+    add(
+      "site-nav-library-action-visible",
+      await page.locator(".site-nav-menu-btn[data-tool-home]").isVisible(),
+    );
+    add(
+      "site-nav-net-tool-visible",
+      await page.locator(".site-nav-menu-btn[data-tool-launch='tool-net-proceeds']").isVisible(),
+    );
+    add(
+      "site-nav-performance-tool-visible",
+      await page.locator(".site-nav-menu-btn[data-tool-launch='tool-simple-performance']").isVisible(),
+    );
+    add(
+      "site-nav-fund-tool-visible",
+      await page.locator(".site-nav-menu-btn[data-tool-launch='tool-simple-fund']").isVisible(),
+    );
+    await page.click(".site-nav-menu-btn[data-tool-launch='tool-simple-performance']");
+    await page.waitForSelector("#tool-simple-performance:not([hidden])", { timeout: 15000 });
+    add(
+      "site-nav-menu-closes-on-selection",
+      !(await page.locator(".site-nav-menu").evaluate((el) => el.open)),
+    );
+
+    await page.click(".site-nav-menu-trigger");
+    await page.mouse.click(20, 20);
+    await page.waitForTimeout(100);
+    add(
+      "site-nav-menu-closes-on-outside-click",
+      !(await page.locator(".site-nav-menu").evaluate((el) => el.open)),
+    );
+
+    await page.goto(`${baseUrl}#net-proceeds`, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForSelector("#tool-net-proceeds:not([hidden])", { timeout: 15000 });
+    add("net-panel-visible", await page.locator("#tool-net-proceeds").isVisible());
     add("net-dataset-removed", !(await page.locator("#netDatasetYear").isVisible()));
     add(
       "net-dataset-badge-removed",
       !(await page.locator("[data-scenario-tool='net-proceeds'] [data-scenario-badge]").isVisible()),
     );
-
-    const portfolioPdfButtonVisible = await page.locator("#downloadPortfolioSummaryPdf").isVisible();
-    add("portfolio-pdf-button-visible", portfolioPdfButtonVisible);
 
     // Net proceeds: live update
     await page.fill("#salePrice", "1000000");
@@ -61,30 +119,9 @@ const run = async () => {
     const pdfBtnVisible = await page.locator("#downloadPdf").isVisible();
     add("pdf-button-visible", pdfBtnVisible);
 
-    const advancedDisabled = await page.locator("#tab-investment-income").isDisabled();
-    add("advanced-performance-disabled", advancedDisabled);
-    if (!advancedDisabled) {
-      await page.click("#tab-investment-income");
-      await page
-        .waitForSelector("#investment-income-calculator:not([hidden])", { timeout: 10000 })
-        .catch(() => {});
-      const perfVisible = await page.locator("#investment-income-calculator").isVisible();
-      add("performance-tab-opens", perfVisible);
-      add("performance-dataset-visible", await page.locator("#incomeDatasetYear").isVisible());
-      add(
-        "performance-dataset-badge-visible",
-        await page.locator("[data-scenario-tool='performance'] [data-scenario-badge]").isVisible(),
-      );
-
-      const beforePerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
-      await page.fill("#incomeOwnershipPercent", "25");
-      await page.waitForTimeout(250);
-      const afterPerf = parseMoney(await page.locator("#incomeKpiNetShare").textContent());
-      add("performance-live-update", afterPerf !== beforePerf, `before=${beforePerf}, after=${afterPerf}`);
-    }
-
-    // Simple performance tab
-    await page.click("#tab-simple-performance");
+    // Simple performance tool
+    await page.goto(`${baseUrl}#simple-performance`, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForSelector("#tool-simple-performance:not([hidden])", { timeout: 15000 });
     const simplePerfVisible = await page.locator("#simple-performance-calculator").isVisible();
     add("simple-performance-tab-opens", simplePerfVisible);
     const beforeSimplePerf = parseMoney(await page.locator("#simplePerfNetShare").textContent());
@@ -97,8 +134,9 @@ const run = async () => {
       `before=${beforeSimplePerf}, after=${afterSimplePerf}`,
     );
 
-    // Fund tab
-    await page.click("#tab-simple-fund");
+    // Fund tool
+    await page.goto(`${baseUrl}#simple-fund`, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForSelector("#tool-simple-fund:not([hidden])", { timeout: 15000 });
     const fundVisible = await page.locator("#simple-fund-calculator").isVisible();
     add("fund-tab-opens", fundVisible);
     add("fund-dataset-removed", !(await page.locator("#fundDatasetYear").isVisible()));

@@ -34,6 +34,7 @@ export const computeNetProceeds = ({
   taxBracketsByYear,
 }) => {
   const ownershipRatio = Math.min(100, ownershipPercent) / 100;
+  const individualCostBase = purchasePrice;
 
   let agentFeeWhole = 0;
   if (feeType === "percent") {
@@ -48,7 +49,7 @@ export const computeNetProceeds = ({
   const additionalSellingCostsWhole = marketingCost + legalCost + mortgageReleaseCost + titleSearchCost;
   const totalSellingCostsWhole = agentFeeWhole + additionalSellingCostsWhole;
   const saleShare = salePrice * ownershipRatio;
-  const purchaseShare = purchasePrice * ownershipRatio;
+  const purchaseShare = individualCostBase;
   const totalSellingCosts = totalSellingCostsWhole * ownershipRatio;
   const capitalGain = saleShare - purchaseShare - totalSellingCosts;
   const discountMultiplier = cgtDiscountApplied ? 0.5 : 1;
@@ -62,11 +63,12 @@ export const computeNetProceeds = ({
   const estimatedCgt = Math.max(0, taxAfterGain - taxBeforeGain);
   const mortgageShare = outstandingMortgage;
   const netProceeds = saleShare - totalSellingCosts - estimatedCgt - mortgageShare;
-  const afterTaxProfit = netProceeds - purchaseShare;
+  const afterTaxProfit = netProceeds - individualCostBase;
 
   return {
     salePrice,
     purchasePrice,
+    individualCostBase,
     ownershipPercent,
     ownershipRatio,
     outstandingMortgage,
