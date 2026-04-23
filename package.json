@@ -7,7 +7,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build:bundle": "esbuild app.js --bundle --format=iife --platform=browser --target=es2020 --outfile=app.bundle.js",
+    "build:bundle": "esbuild app.js --bundle --format=iife --platform=browser --target=es2020 --define:process.env.NODE_ENV='\"production\"' --minify --outfile=app.bundle.js",
     "audit:a11y": "node scripts/a11y-audit.mjs",
     "verify": "npm run lint && npm run format:check && npm test && npm run build:bundle",
     "test": "vitest run",
@@ -34,5 +34,9 @@
     "playwright": "^1.58.2",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   }
 }

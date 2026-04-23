@@ -16,83 +16,61 @@
     <script defer src="app.bundle.js"></script>
   </head>
   <body>
-    <header class="site-header">
-      <div class="site-header-inner">
-        <p class="eyebrow">AU Investment Property Toolkit</p>
-        <h1 id="site-title">Property Investor Tools</h1>
-        <p class="intro">
-          Use the menu to switch between calculators. More tools can be added here over time.
-        </p>
-        <div class="portfolio-actions">
-          <button class="button-primary" id="downloadPortfolioSummaryPdf" type="button">
-            Download Portfolio Summary PDF
-          </button>
-          <p class="pdf-status" id="portfolioPdfStatus" aria-live="polite"></p>
-        </div>
-      </div>
+    <header class="site-header" id="home">
+      <div id="siteHeaderRoot"></div>
     </header>
     <main class="page-shell">
       <section class="calculator-card tool-suite" aria-labelledby="site-title">
-        <div class="tool-nav-shell">
-          <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
-            <button
-              class="tool-tab is-active"
-              id="tab-net-proceeds"
-              type="button"
-              role="tab"
-              data-tool-tab="tool-net-proceeds"
-              aria-controls="tool-net-proceeds"
-              aria-selected="true"
-            >
-              Net Proceeds
-            </button>
-            <button
-              class="tool-tab"
-              id="tab-simple-performance"
-              type="button"
-              role="tab"
-              data-tool-tab="tool-simple-performance"
-              aria-controls="tool-simple-performance"
-              aria-selected="false"
-            >
-              Simple Performance
-            </button>
-            <button
-              class="tool-tab"
-              id="tab-investment-income"
-              type="button"
-              role="tab"
-              data-tool-tab="tool-investment-income"
-              aria-controls="tool-investment-income"
-              aria-selected="false"
-              aria-disabled="true"
-              title="Advanced Performance Calculator is temporarily disabled"
-              disabled
-            >
-              Advanced Performance (Disabled)
-            </button>
-            <button
-              class="tool-tab"
-              id="tab-simple-fund"
-              type="button"
-              role="tab"
-              data-tool-tab="tool-simple-fund"
-              aria-controls="tool-simple-fund"
-              aria-selected="false"
-            >
-              Simple Fund
-            </button>
-          </nav>
-          <div class="tool-menu-mobile">
-            <label class="visually-hidden" for="toolMenuSelect">Choose calculator</label>
-            <select id="toolMenuSelect" aria-label="Choose calculator">
-              <option value="tool-net-proceeds">Net Proceeds</option>
-              <option value="tool-simple-performance">Simple Performance</option>
-              <option value="tool-investment-income" disabled>Advanced Performance (Disabled)</option>
-              <option value="tool-simple-fund">Simple Fund</option>
-            </select>
+        <h1 class="visually-hidden" id="site-title">Property Investor Tools</h1>
+        <div id="toolHomeRoot"></div>
+
+        <section class="tool-workspace" id="toolWorkspace" hidden aria-label="Focused calculator workspace">
+          <div id="workspaceContextRoot"></div>
+          <div class="tool-nav-shell" hidden>
+            <nav class="tool-menu" aria-label="Calculator menu" role="tablist" aria-orientation="horizontal">
+              <button
+                class="tool-tab is-active"
+                id="tab-net-proceeds"
+                type="button"
+                role="tab"
+                data-tool-tab="tool-net-proceeds"
+                aria-controls="tool-net-proceeds"
+                aria-selected="true"
+              >
+                Net Proceeds
+              </button>
+              <button
+                class="tool-tab"
+                id="tab-simple-performance"
+                type="button"
+                role="tab"
+                data-tool-tab="tool-simple-performance"
+                aria-controls="tool-simple-performance"
+                aria-selected="false"
+              >
+                Simple Performance
+              </button>
+              <button
+                class="tool-tab"
+                id="tab-simple-fund"
+                type="button"
+                role="tab"
+                data-tool-tab="tool-simple-fund"
+                aria-controls="tool-simple-fund"
+                aria-selected="false"
+              >
+                Simple Fund
+              </button>
+            </nav>
+            <div class="tool-menu-mobile">
+              <label class="visually-hidden" for="toolMenuSelect">Choose calculator</label>
+              <select id="toolMenuSelect" aria-label="Choose calculator">
+                <option value="tool-net-proceeds">Net Proceeds</option>
+                <option value="tool-simple-performance">Simple Performance</option>
+                <option value="tool-simple-fund">Simple Fund</option>
+              </select>
+            </div>
           </div>
-        </div>
 
         <section
           class="tool-panel is-active"
@@ -103,11 +81,12 @@
         >
           <div class="tool-panel-head">
             <h2>Net Proceeds Calculator</h2>
-            <p class="tool-description">Model settlement proceeds using disposal costs, ownership apportionment, and CGT impact.</p>
-            <p class="tool-description tool-context">
-              Investor context: this tool models disposal and tax outcomes, not full market valuation (cap rate/comparable
-              sales methods).
-            </p>
+            <p class="tool-description">Estimate cash left after costs, CGT, and your loan payout.</p>
+            <div class="tool-highlights" aria-label="Net proceeds highlights">
+              <span class="tool-highlight">Ownership aware</span>
+              <span class="tool-highlight">CGT estimate</span>
+              <span class="tool-highlight">PDF report</span>
+            </div>
             <div
               class="scenario-actions"
               data-scenario-controls
@@ -183,10 +162,10 @@
             </div>
           </div>
           <nav class="tool-jump-nav" aria-label="Net proceeds sections">
-            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionAsset">Asset Inputs</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionCosts">Disposal Costs</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionTax">Tax (CGT)</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="netResultsDock">Settlement Outcomes</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionAsset">Asset</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionCosts">Costs</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netSectionTax">CGT</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="netResultsDock">Results</button>
           </nav>
 
           <div class="layout-grid">
@@ -226,7 +205,25 @@
                   </div>
 
                   <div class="field-item">
-                    <label for="purchasePrice">Purchase price (whole asset)</label>
+                    <label for="purchasePrice">
+                      My individual cost base
+                      <span class="info-tip-wrap">
+                        <button
+                          class="info-tip"
+                          type="button"
+                          data-tooltip-trigger
+                          aria-expanded="false"
+                          aria-controls="tip-individual-cost-base"
+                          aria-label="More information about individual cost base"
+                        >
+                          i
+                        </button>
+                        <span class="info-tip-text" id="tip-individual-cost-base" role="tooltip" aria-hidden="true"
+                          >Enter your own cost base only. This is not scaled from the whole-asset purchase price by
+                          ownership share.</span
+                        >
+                      </span>
+                    </label>
                     <input
                       id="purchasePrice"
                       name="purchasePrice"
@@ -310,14 +307,11 @@
                   </div>
                 </div>
 
-                <p class="note net-helper-note">
-                  Sale, purchase, and selling costs are split by ownership share. Loan payout is treated as your personal
-                  liability.
-                </p>
+                <p class="note net-helper-note">Sale and costs are split by ownership. Cost base and loan payout stay personal.</p>
               </section>
 
               <section class="panel net-panel net-panel-selling-costs" id="netSectionCosts" aria-labelledby="selling-costs-title">
-                <h3 id="selling-costs-title">2. Selling Costs</h3>
+                <h3 id="selling-costs-title">2. Disposal Costs</h3>
 
                 <div class="net-sell-layout">
                   <div class="net-sell-main">
@@ -381,7 +375,7 @@
                     </div>
 
                     <div class="net-subgroup">
-                      <h4 class="net-subgroup-title">Other selling costs</h4>
+                      <h4 class="net-subgroup-title">Other costs</h4>
                       <div class="net-field-grid net-field-grid-costs">
                         <div class="field-item">
                           <label for="marketingCost">Marketing</label>
@@ -411,7 +405,7 @@
                       </div>
 
                       <details class="field-details">
-                        <summary>Advanced settlement costs</summary>
+                        <summary>More costs</summary>
                         <div class="field-details-body">
                           <div class="net-field-grid net-field-grid-costs">
                             <div class="field-item">
@@ -446,22 +440,22 @@
                   </div>
 
                   <section class="net-sell-summary" aria-label="Disposal cost snapshot">
-                    <h4 class="net-subgroup-title">Disposal Cost Snapshot</h4>
+                    <h4 class="net-subgroup-title">Cost Snapshot</h4>
                     <dl class="net-cost-list">
                       <div>
-                        <dt>Commission (asset level)</dt>
+                        <dt>Commission</dt>
                         <dd id="agentFeeComputed">$0.00</dd>
                       </div>
                       <div>
-                        <dt>Other disposal costs (asset level)</dt>
+                        <dt>Other costs</dt>
                         <dd id="additionalSellingCostsComputed">$0.00</dd>
                       </div>
                       <div class="net-cost-total">
-                        <dt>Total disposal costs (asset level)</dt>
+                        <dt>Total costs</dt>
                         <dd id="totalSellingCostsWholeComputed">$0.00</dd>
                       </div>
                       <div>
-                        <dt>Your share of selling costs</dt>
+                        <dt>Your share</dt>
                         <dd id="totalSellingCostsInline">$0.00</dd>
                       </div>
                     </dl>
@@ -511,9 +505,7 @@
                   </div>
                 </div>
 
-                <p class="note net-helper-note">
-                  CGT uses marginal-rate math: tax on base income vs tax on base income plus taxable gain.
-                </p>
+                <p class="note net-helper-note">CGT is estimated from the extra tax created by the taxable gain.</p>
               </section>
             </form>
 
@@ -532,9 +524,7 @@
                 >
                   $0.00
                 </p>
-                <p class="results-hero-note">
-                  After your share of selling costs, estimated CGT, and personal loan payout.
-                </p>
+                <p class="results-hero-note">After costs, CGT, and your loan payout.</p>
               </section>
 
               <dl class="result-list result-list-key">
@@ -543,29 +533,29 @@
                   <dd id="ownershipApplied">100.00%</dd>
                 </div>
                 <div>
-                  <dt>Sale proceeds (your share)</dt>
+                  <dt>Sale proceeds</dt>
                   <dd id="saleShare">$0.00</dd>
                 </div>
                 <div>
-                  <dt>Selling costs (your share, pre-CGT)</dt>
+                  <dt>Disposal costs</dt>
                   <dd id="totalSellingCosts">$0.00</dd>
                 </div>
                 <div>
-                  <dt>Estimated CGT (your circumstances)</dt>
+                  <dt>Estimated CGT</dt>
                   <dd id="estimatedCgt">$0.00</dd>
                 </div>
                 <div>
-                  <dt>Loan payout at settlement (personal)</dt>
+                  <dt>Loan payout</dt>
                   <dd id="mortgageShare">$0.00</dd>
                 </div>
                 <div>
-                  <dt>After-tax profit vs purchase share</dt>
+                  <dt>After-tax profit</dt>
                   <dd id="afterTaxProfit">$0.00</dd>
                 </div>
               </dl>
 
               <details class="results-details results-details-net">
-                <summary>Tax and gain details</summary>
+                <summary>Gain and tax detail</summary>
                 <dl class="result-list result-list-detailed">
                   <div>
                     <dt>Capital gain / loss before discount</dt>
@@ -587,7 +577,7 @@
               </details>
 
               <div class="calculator-actions">
-                <button class="button-primary" id="downloadPdf" type="button">Download PDF Report</button>
+                <button class="button-primary" id="downloadPdf" type="button">Export PDF</button>
                 <p class="pdf-status" id="pdfStatus" aria-live="polite"></p>
               </div>
             </section>
@@ -604,12 +594,59 @@
         >
           <div class="tool-panel-head">
             <h2>Simple Performance Calculator</h2>
-            <p class="tool-description">
-              Quick annual snapshot using one year of income, expenses, and fees.
-            </p>
-            <p class="tool-description tool-context">
-              No statement uploads or monthly detail in this version. Use the Advanced tool for month-level tracking.
-            </p>
+            <p class="tool-description">Enter one year of totals for a quick income and health snapshot.</p>
+            <div class="tool-highlights" aria-label="Simple performance highlights">
+              <span class="tool-highlight">Annual snapshot</span>
+              <span class="tool-highlight">No uploads</span>
+              <span class="tool-highlight">Health view</span>
+            </div>
+            <div
+              class="scenario-actions"
+              data-scenario-controls
+              data-scenario-tool="simple-performance"
+              data-scenario-form="simple-performance-calculator"
+            >
+              <div class="scenario-actions-main">
+                <details class="scenario-menu" data-scenario-menu>
+                  <summary class="scenario-menu-trigger" aria-label="Scenario actions" title="Scenario actions">
+                    <span class="scenario-menu-trigger-icon" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                        <path d="M3 5h10M3 8h10M3 11h10" />
+                      </svg>
+                    </span>
+                    <span class="visually-hidden">Scenario actions</span>
+                  </summary>
+                  <div class="scenario-menu-list">
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="reset">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M12.4 6.4a4.8 4.8 0 1 1-1.4-2.6M12.4 3.4v3h-3" />
+                        </svg>
+                      </span>
+                      <span>Reset</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="export">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 12.4V4.6M5.6 7l2.4-2.4L10.4 7M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Export JSON</span>
+                    </button>
+                    <button class="scenario-btn scenario-menu-btn" type="button" data-scenario-action="import">
+                      <span class="scenario-menu-item-icon" aria-hidden="true">
+                        <svg viewBox="0 0 16 16" focusable="false" aria-hidden="true">
+                          <path d="M8 3.2v7.8M5.6 8.6L8 11l2.4-2.4M3.2 12.8h9.6" />
+                        </svg>
+                      </span>
+                      <span>Import JSON</span>
+                    </button>
+                  </div>
+                </details>
+              </div>
+              <input type="file" accept="application/json" data-scenario-action="import-file" hidden />
+              <p class="scenario-status" data-scenario-status aria-live="polite"></p>
+            </div>
           </div>
           <div class="mobile-summary-bar" aria-label="Mobile quick summary">
             <div class="mobile-summary-metric">
@@ -626,15 +663,9 @@
             </div>
           </div>
           <nav class="tool-jump-nav" aria-label="Simple performance sections">
-            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAsset">
-              Asset Setup
-            </button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAnnual">
-              Annual Totals
-            </button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfResultsDock">
-              Snapshot
-            </button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAsset">Asset</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfSectionAnnual">Totals</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="simplePerfResultsDock">Results</button>
           </nav>
 
           <div class="layout-grid">
@@ -672,9 +703,6 @@
 
               <section class="panel" id="simplePerfSectionAnnual" aria-labelledby="simple-perf-annual-title">
                 <h3 id="simple-perf-annual-title">2. Annual Totals</h3>
-                <p class="note">
-                  Enter annual totals for one financial year to get a quick performance snapshot.
-                </p>
                 <div class="field-grid">
                   <div class="field-item">
                     <label for="simplePerfAnnualIncome">Annual income</label>
@@ -738,7 +766,7 @@
 
               <dl class="result-list result-list-key">
                 <div>
-                  <dt>Annual net operating cashflow</dt>
+                  <dt>Annual net cashflow</dt>
                   <dd id="simplePerfAnnualNet">$0.00</dd>
                 </div>
                 <div>
@@ -758,7 +786,7 @@
                   <dd id="simplePerfCostRatio">0.00%</dd>
                 </div>
                 <div>
-                  <dt>Your average monthly net</dt>
+                  <dt>Avg monthly net</dt>
                   <dd id="simplePerfMonthlyShare">$0.00</dd>
                 </div>
               </dl>
@@ -772,7 +800,7 @@
           data-tool-panel
           role="tabpanel"
           hidden
-          aria-labelledby="tab-investment-income"
+          aria-label="Advanced Performance Calculator"
         >
           <div class="tool-panel-head">
             <h2>Advanced Performance Calculator</h2>
@@ -1632,12 +1660,12 @@
         >
           <div class="tool-panel-head">
             <h2>Simple Investment Fund Calculator</h2>
-            <p class="tool-description">
-              Estimate monthly income from a capital-stable fund targeting 4.00% + the current RBA cash rate.
-            </p>
-            <p class="tool-description tool-context">
-              Capital is fixed in this model. Returns are paid as income, not capital growth.
-            </p>
+            <p class="tool-description">Estimate 12 months of income from a capital-stable fund.</p>
+            <div class="tool-highlights" aria-label="Simple fund highlights">
+              <span class="tool-highlight">Income focused</span>
+              <span class="tool-highlight">12-month schedule</span>
+              <span class="tool-highlight">Capital preserved</span>
+            </div>
             <div
               class="scenario-actions"
               data-scenario-controls
@@ -1697,9 +1725,9 @@
             </div>
           </div>
           <nav class="tool-jump-nav" aria-label="Fund sections">
-            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionInput">Investment Input</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionSchedule">12-Month Schedule</button>
-            <button class="tool-jump-btn" type="button" data-scroll-target="fundResultsDock">Distribution Summary</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionInput">Input</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundSectionSchedule">Schedule</button>
+            <button class="tool-jump-btn" type="button" data-scroll-target="fundResultsDock">Results</button>
           </nav>
 
           <div class="layout-grid layout-grid-fund">
@@ -1719,7 +1747,7 @@
                       autocomplete="off"
                       placeholder="$100,000"
                     />
-                    <p class="note fund-input-note">Income-focused model. Capital value stays fixed unless you add or withdraw capital.</p>
+                    <p class="note fund-input-note">Capital stays fixed unless you add or withdraw funds.</p>
                   </div>
 
                   <div class="fund-assumption-card" aria-label="Fund mechanics">
@@ -1755,9 +1783,7 @@
 
               <section class="panel fund-panel" id="fundSectionSchedule" aria-labelledby="fund-schedule-title">
                 <h3 id="fund-schedule-title">2. 12-Month Distribution Schedule</h3>
-                <p class="note">
-                  Projection starts from <strong id="fundStartDate">-</strong>. Monthly distributions use a constant target rate.
-                </p>
+                <p class="note">Starts from <strong id="fundStartDate">-</strong> using the current target rate.</p>
 
                 <div class="fund-snapshot">
                   <article class="fund-snapshot-item">
@@ -1811,7 +1837,7 @@
                 >
                   $0.00
                 </p>
-                <p class="results-hero-note">Income projection using the current target annual rate.</p>
+                <p class="results-hero-note">Based on the current target annual rate.</p>
               </section>
               <section class="results-trend-grid results-trend-grid-fund" aria-label="Distribution trend layer">
                 <article class="sparkline-card sparkline-card-fund" id="fundMonthlyTrendCard">
@@ -1860,7 +1886,7 @@
               </dl>
 
               <details class="results-details fund-rate-details">
-                <summary>Rate assumptions</summary>
+                <summary>Assumptions</summary>
                 <dl class="result-list result-list-detailed">
                   <div>
                     <dt>RBA cash rate</dt>
@@ -1878,8 +1904,8 @@
               </details>
 
               <p class="note">
-                Default cash rate is 3.85% (RBA target cash rate, as at 11 Mar 2026). Source:
-                <a href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noreferrer">RBA Cash Rate</a>.
+                Cash rate default: 3.85% (RBA, 11 Mar 2026).
+                <a href="https://www.rba.gov.au/statistics/cash-rate/" target="_blank" rel="noreferrer">Source</a>.
               </p>
             </section>
           </div>

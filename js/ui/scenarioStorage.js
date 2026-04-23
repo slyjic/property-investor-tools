@@ -1,3 +1,4 @@
+import { formatCurrencyInput } from "../shared/runtime.js";
 import { createScenarioStorageKey } from "../shared/scenarioStorageKeys.js";
 
 const CONTROL_SELECTOR = "input, select, textarea";
@@ -86,6 +87,12 @@ const triggerControlUpdate = (control) => {
   control.dispatchEvent(new window.Event("change", { bubbles: true }));
 };
 
+const formatFormCurrencyControls = (form) => {
+  Array.from(form.querySelectorAll("input[data-currency='true']")).forEach((control) => {
+    formatCurrencyInput(control);
+  });
+};
+
 const applyFormSnapshot = (form, values) => {
   if (!values || typeof values !== "object") {
     return;
@@ -104,6 +111,8 @@ const applyFormSnapshot = (form, values) => {
 
     triggerControlUpdate(controls[0]);
   });
+
+  formatFormCurrencyControls(form);
 };
 
 const parseImportedSnapshot = (rawText) => {
@@ -187,6 +196,7 @@ const wireScenarioControls = (container) => {
   const importButton = container.querySelector("[data-scenario-action='import']");
   const importFileInput = container.querySelector("[data-scenario-action='import-file']");
   const scenarioMenu = container.querySelector("[data-scenario-menu]");
+  const scenarioMenuTrigger = container.querySelector(".scenario-menu-trigger");
 
   const defaultValues = collectFormSnapshot(form);
   let statusTimerId = null;
@@ -422,8 +432,19 @@ const wireScenarioControls = (container) => {
     }
   };
 
+  const syncScenarioMenuTrigger = () => {
+    if (!scenarioMenuTrigger) {
+      return;
+    }
+
+    scenarioMenuTrigger.setAttribute("aria-expanded", scenarioMenu?.open ? "true" : "false");
+  };
+
   form.addEventListener("input", onAutosaveEvent);
   form.addEventListener("change", onAutosaveEvent);
+
+  scenarioMenu?.addEventListener("toggle", syncScenarioMenuTrigger);
+  syncScenarioMenuTrigger();
 
   if (saveButton) {
     saveButton.addEventListener("click", () => {
@@ -516,6 +537,24 @@ const wireScenarioControls = (container) => {
   }
 
   loadFromStorage(false, activeDatasetId);
+
+  document.addEventListener("click", (event) => {
+    if (!scenarioMenu?.open) {
+      return;
+    }
+
+    if (scenarioMenu.contains(event.target)) {
+      return;
+    }
+
+    closeScenarioMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeScenarioMenu();
+    }
+  });
 };
 
 export const initScenarioStorage = () => {

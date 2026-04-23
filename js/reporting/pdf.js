@@ -157,7 +157,7 @@ export const generateNetProceedsPdfReport = ({
 
     const inputRows = [
       { label: "Contract sale price (whole asset)", value: formatMoney(report.salePrice) },
-      { label: "Acquisition price (whole asset)", value: formatMoney(report.purchasePrice) },
+      { label: "My individual cost base", value: formatMoney(report.purchasePrice) },
       { label: "Beneficial ownership", value: formatPercent(report.ownershipPercent) },
       { label: "Debt payout at settlement (personal)", value: formatMoney(report.outstandingMortgage) },
       { label: "Expected taxable income (excluding gain)", value: formatMoney(report.taxableIncome) },
@@ -189,8 +189,8 @@ export const generateNetProceedsPdfReport = ({
         value: `${formatMoney(report.salePrice)} x ${formatPercent(report.ownershipPercent)} = ${formatMoney(report.saleShare)}`,
       },
       {
-        label: "Acquisition share",
-        value: `${formatMoney(report.purchasePrice)} x ${formatPercent(report.ownershipPercent)} = ${formatMoney(report.purchaseShare)}`,
+        label: "Individual cost base",
+        value: formatMoney(report.purchaseShare),
       },
       {
         label: "Apportioned disposal costs",
@@ -215,7 +215,7 @@ export const generateNetProceedsPdfReport = ({
       { label: "Your taxable capital gain", value: formatMoney(report.taxableCapitalGain) },
       { label: "Incremental CGT estimate", value: formatMoney(report.estimatedCgt) },
       { label: "Debt payout at settlement", value: formatMoney(report.mortgageShare) },
-      { label: "After-tax profit vs acquisition share", value: formatMoney(report.afterTaxProfit) },
+      { label: "After-tax profit vs individual cost base", value: formatMoney(report.afterTaxProfit) },
     ];
 
     drawSection("Inputs");

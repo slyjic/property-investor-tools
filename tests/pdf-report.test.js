@@ -59,7 +59,7 @@ class MockPdf {
 
 const baseReport = {
   salePrice: 1000000,
-  purchasePrice: 600000,
+  purchasePrice: 300000,
   ownershipPercent: 50,
   outstandingMortgage: 100000,
   taxYear: "2025-26",

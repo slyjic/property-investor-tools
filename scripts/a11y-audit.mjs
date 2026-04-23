@@ -58,19 +58,25 @@ const server = createServer(async (req, res) => {
 
 const scenarios = [
   {
-    name: "Net Proceeds",
+    name: "Home",
     setup: async () => {},
+  },
+  {
+    name: "Net Proceeds",
+    setup: async (page) => {
+      await page.click("#launch-net-proceeds");
+    },
   },
   {
     name: "Simple Performance",
     setup: async (page) => {
-      await page.click("#tab-simple-performance");
+      await page.click("#launch-simple-performance");
     },
   },
   {
     name: "Simple Fund",
     setup: async (page) => {
-      await page.click("#tab-simple-fund");
+      await page.click("#launch-simple-fund");
     },
   },
 ];
@@ -105,7 +111,7 @@ const run = async () => {
 
     for (const scenario of scenarios) {
       await page.goto(url, { waitUntil: "commit" });
-      await page.waitForSelector("#tab-net-proceeds", { timeout: 15000 });
+      await page.waitForSelector("#launch-net-proceeds", { timeout: 15000 });
       await scenario.setup(page);
 
       const axeResult = await new AxeBuilder({ page })
